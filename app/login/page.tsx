@@ -1,7 +1,16 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
-import { login } from './actions';
+import LoginFormCard from './login-form-card';
+import { 
+  Package, 
+  ShoppingBag, 
+  TrendingUp, 
+  ArrowUpRight, 
+  Users,
+  CheckCircle,
+  Sparkles
+} from 'lucide-react';
 
 export default async function Page({ 
   searchParams 
@@ -19,79 +28,215 @@ export default async function Page({
   const errorMsg = resolvedSearchParams.error;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-100 p-6 select-none relative overflow-hidden">
-      {/* Background radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none" />
+    <main className="min-h-screen w-full flex bg-gradient-to-br from-[#F8FAFC] via-[#EEF6FF] to-[#F8FAFC] text-brand-navy relative overflow-hidden font-sans select-none">
+      
+      {/* Soft Clean Logo Color Accents in the Background */}
+      <div className="absolute -top-[10%] -right-[5%] w-[500px] h-[500px] bg-brand-blue/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-[10%] -left-[5%] w-[500px] h-[500px] bg-brand-teal/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[35%] left-[20%] w-[300px] h-[300px] bg-brand-sky/5 rounded-full blur-[90px] pointer-events-none" />
 
-      <div className="max-w-md w-full bg-slate-900 border border-slate-850 rounded-3xl p-8 space-y-8 shadow-2xl relative">
+      {/* Split Screen Layout Container */}
+      <div className="w-full min-h-screen flex relative z-10">
         
-        {/* Logo Branding */}
-        <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-            <span className="font-extrabold text-xl text-white">D</span>
+        {/* LEFT SECTION: Brand Storytelling & Dashboard Preview (60% Desktop) */}
+        <div className="hidden lg:flex lg:w-[58%] xl:w-[60%] p-16 xl:p-20 flex-col justify-between relative">
+          
+          {/* Header Badge */}
+          <div className="flex items-center">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-white/80 backdrop-blur-sm border border-brand-border rounded-full text-[11px] font-bold text-brand-blue shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
+              Platform Webstore Instan Terpercaya
+            </span>
           </div>
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold tracking-tight text-slate-100">Masuk Panel Daganta</h1>
-            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Akses Dasbor Toko Anda</p>
-          </div>
-        </div>
 
-        {/* Error Alert Display */}
-        {errorMsg && (
-          <div className="p-3.5 bg-rose-950/20 border border-rose-500/20 rounded-xl flex items-start gap-2.5 text-[10px] text-rose-400 font-semibold leading-normal">
-            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div className="space-y-0.5">
-              <span className="font-bold text-rose-350 block">Gagal Masuk</span>
-              <span>{errorMsg}</span>
+          {/* Copywriting & Storytelling */}
+          <div className="space-y-6 max-w-xl my-auto">
+            <h2 className="text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.18] text-brand-navy">
+              Bangun Toko Online Anda <br />
+              <span className="bg-gradient-to-r from-brand-blue via-brand-sky to-brand-teal bg-clip-text text-transparent">
+                Tanpa Ribet Teknis
+              </span>
+            </h2>
+            <p className="text-slate-500 text-sm xl:text-base font-semibold leading-relaxed">
+              Kelola produk, pesanan, pelanggan, dan pembayaran dalam satu dashboard yang mudah digunakan.
+            </p>
+
+            {/* Dashboard Mockup in Browser Shell */}
+            <div className="relative pt-10 pl-10">
+              
+              {/* Floating Stat Card 1: 1.250+ Produk Aktif (Commerce Blue accent) */}
+              <div className="absolute -left-6 top-20 bg-white rounded-2xl p-4 shadow-[0_10px_25px_rgba(37,99,235,0.03)] border border-brand-border/60 flex items-center gap-3.5 animate-bounce [animation-duration:6s] z-30">
+                <div className="w-10 h-10 rounded-xl bg-blue-50/80 flex items-center justify-center text-brand-blue border border-blue-100">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Produk Aktif</p>
+                  <p className="text-base font-bold text-brand-navy">1.250+ Produk</p>
+                </div>
+              </div>
+
+              {/* Floating Stat Card 2: 8.500+ Pesanan Diproses (Growth Teal accent) */}
+              <div className="absolute -right-6 top-10 bg-white rounded-2xl p-4 shadow-[0_10px_25px_rgba(20,184,166,0.03)] border border-brand-border/60 flex items-center gap-3.5 animate-bounce [animation-duration:5s] [animation-delay:1.5s] z-30">
+                <div className="w-10 h-10 rounded-xl bg-teal-50/80 flex items-center justify-center text-brand-teal border border-teal-100">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Pesanan Diproses</p>
+                  <p className="text-base font-bold text-brand-navy">8.500+ Pesanan</p>
+                </div>
+              </div>
+
+              {/* Floating Stat Card 3: 350+ Toko Bertumbuh (Sky Blue / Navy accent) */}
+              <div className="absolute left-[25%] -bottom-6 bg-white rounded-2xl p-4 shadow-[0_10px_25px_rgba(56,189,248,0.03)] border border-brand-border/60 flex items-center gap-3.5 animate-bounce [animation-duration:7s] [animation-delay:3s] z-30">
+                <div className="w-10 h-10 rounded-xl bg-slate-50/80 flex items-center justify-center text-brand-navy border border-slate-100">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Toko Bertumbuh</p>
+                  <p className="text-base font-bold text-brand-navy">350+ Toko</p>
+                </div>
+              </div>
+
+              {/* Browser Preview Container */}
+              <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(11,31,51,0.04)] border border-brand-border overflow-hidden relative z-20 transform hover:-translate-y-1 transition-transform duration-500">
+                
+                {/* Simulated Browser Bar */}
+                <div className="bg-[#F8FAFC] px-4 py-3.5 border-b border-brand-border flex items-center gap-3">
+                  {/* Browser dots */}
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  </div>
+                  {/* Address bar */}
+                  <div className="flex-1 bg-white border border-brand-border rounded-lg py-1 px-3 text-[10px] text-slate-500 font-semibold text-center truncate select-none shadow-sm">
+                    toya-nusantara.daganta.store
+                  </div>
+                </div>
+
+                {/* Dashboard Mockup Content */}
+                <div className="p-6 space-y-6 bg-white">
+                  
+                  {/* Header Row */}
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pesanan Hari Ini</p>
+                      <h4 className="text-xl font-bold text-brand-navy">Rp 4.850.000</h4>
+                    </div>
+                    <span className="inline-flex items-center gap-0.5 px-2.5 py-1 bg-teal-50 border border-teal-100 rounded-full text-[10px] font-bold text-brand-teal">
+                      <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
+                      +12.4%
+                    </span>
+                  </div>
+
+                  {/* Gorgeous Mini SVG Chart utilizing clean Blue & Teal gradients */}
+                  <div className="h-20 w-full relative">
+                    <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="blueTealGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.1" />
+                          <stop offset="100%" stopColor="#14B8A6" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      {/* Area fill */}
+                      <path 
+                        d="M0,30 Q15,22 30,24 T60,12 T85,6 T100,2 L100,30 Z" 
+                        fill="url(#blueTealGradient)" 
+                      />
+                      {/* Line */}
+                      <path 
+                        d="M0,30 Q15,22 30,24 T60,12 T85,6 T100,2" 
+                        fill="none" 
+                        stroke="#2563EB" 
+                        strokeWidth="1.8" 
+                        strokeLinecap="round" 
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Summary Subwidgets */}
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-brand-border">
+                    <div className="p-3 bg-[#F8FAFC]/80 rounded-xl space-y-1 border border-brand-border/60">
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <Users className="w-3.5 h-3.5 text-brand-blue" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Pelanggan Baru</span>
+                      </div>
+                      <p className="text-base font-bold text-brand-navy">48 Toko</p>
+                    </div>
+
+                    <div className="p-3 bg-[#F8FAFC]/80 rounded-xl space-y-1 border border-brand-border/60">
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <CheckCircle className="w-3.5 h-3.5 text-brand-teal" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Selesai Dikirim</span>
+                      </div>
+                      <p className="text-base font-bold text-brand-navy">24 Pesanan</p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
             </div>
           </div>
-        )}
 
-        {/* Login Form */}
-        <form action={login} className="space-y-5 text-xs">
-          {/* Email input field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alamat Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="nama@toko.com"
-              required
-              className="w-full bg-slate-950 border border-slate-850 hover:border-slate-800 rounded-xl px-4 py-2.5 text-slate-350 placeholder-slate-650 focus:outline-none focus:border-indigo-500/30 transition-all font-medium"
-            />
+          {/* Slogan Info */}
+          <div className="text-slate-400 text-xs font-semibold tracking-wide flex items-center gap-2">
+            <span>Platform Terpercaya</span>
+            <span className="text-slate-300">&bull;</span>
+            <span>WhatsApp-First Commerce</span>
           </div>
 
-          {/* Password input field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kata Sandi</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              required
-              className="w-full bg-slate-950 border border-slate-850 hover:border-slate-800 rounded-xl px-4 py-2.5 text-slate-350 placeholder-slate-650 focus:outline-none focus:border-indigo-500/30 transition-all font-medium"
-            />
-          </div>
-
-          {/* Submit Action */}
-          <div className="pt-2">
-            <button
-              type="submit"
-              className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-center select-none"
-            >
-              Masuk Dasbor Toko
-            </button>
-          </div>
-        </form>
-
-        {/* Development Tip Banner */}
-        <div className="pt-4 border-t border-slate-950 text-center">
-          <span className="text-[9px] text-slate-500 font-bold block select-none">
-            Gunakan Akun Supabase Dev Terdaftar
-          </span>
         </div>
+
+        {/* RIGHT SECTION: Login Form Card (40% Desktop, Full Width Mobile) */}
+        <div className="w-full lg:w-[42%] xl:w-[40%] flex flex-col justify-between items-center p-6 sm:p-10 relative">
+          
+          <div className="w-full flex-1 flex flex-col justify-center items-center py-6">
+            
+            {/* Mobile Brand Header (Hidden on Desktop) */}
+            <div className="lg:hidden flex flex-col items-center text-center space-y-3 mb-6 select-none">
+              
+              {/* Dynamic Styled Logo */}
+              <div className="w-10 h-10 flex items-center justify-center">
+                <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="logo-mobile-gradient" x1="10" y1="4" x2="39" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#2563EB" />
+                      <stop offset="60%" stopColor="#38BDF8" />
+                      <stop offset="100%" stopColor="#14B8A6" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M8 6C8 4.89543 8.89543 4 10 4H20C29.9411 4 38 11.1612 38 20C38 28.8388 29.9411 36 20 36H10C8.89543 36 8 35.1046 8 34V6Z" 
+                    fill="#0B1F33" 
+                  />
+                  <path 
+                    d="M17 10V30C17 30.5523 17.4477 31 18 31C24.0751 31 29 26.0751 29 20C29 13.9249 24.0751 9 18 9C17.4477 9 17 9.44772 17 10Z" 
+                    fill="url(#logo-mobile-gradient)" 
+                  />
+                  <circle cx="18" cy="20" r="3.5" fill="#FFFFFF" />
+                </svg>
+              </div>
+
+              <div className="space-y-0.5">
+                <h3 className="text-lg font-bold text-brand-navy">Daganta</h3>
+                <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Mudah. Mandiri. Bertumbuh.</p>
+              </div>
+            </div>
+
+            {/* Main Interactive Login Form Card */}
+            <LoginFormCard errorMsg={errorMsg} />
+
+          </div>
+
+          {/* Footer Copyright */}
+          <div className="text-center text-[11px] text-slate-400 font-semibold py-2 select-none flex flex-col items-center gap-0.5">
+            <span>&copy; 2026 Daganta</span>
+            <span className="text-slate-350 text-[10px]">Mudah. Mandiri. Bertumbuh.</span>
+          </div>
+
+        </div>
+
       </div>
     </main>
   );

@@ -1,5 +1,11 @@
 import './globals.css';
 import { Metadata } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Daganta - Platform Webstore Instan UMKM & Agen Digital',
@@ -13,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="antialiased">
+      <body className={`${plusJakartaSans.className} antialiased`}>
         {children}
       </body>
     </html>
