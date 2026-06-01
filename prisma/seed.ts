@@ -13,13 +13,13 @@ async function main() {
     where: { email: 'admin@daganta.com' },
     update: {
       name: 'Super Admin Daganta',
-      authUserId: 'super-admin-auth-id',
+      authUserId: null,
     },
     create: {
       id: superAdminId,
       email: 'admin@daganta.com',
       name: 'Super Admin Daganta',
-      authUserId: 'super-admin-auth-id',
+      authUserId: null,
     },
   });
   console.log('Super Admin UserProfile seeded:', superAdmin.email);
@@ -29,13 +29,13 @@ async function main() {
     where: { email: 'owner.toya@daganta.com' },
     update: {
       name: 'Arifin Toya Owner',
-      authUserId: 'owner-toya-auth-id',
+      authUserId: null,
     },
     create: {
       id: toyaOwnerId,
       email: 'owner.toya@daganta.com',
       name: 'Arifin Toya Owner',
-      authUserId: 'owner-toya-auth-id',
+      authUserId: null,
     },
   });
   console.log('Toya Owner UserProfile seeded:', toyaOwner.email);
@@ -45,13 +45,13 @@ async function main() {
     where: { email: 'owner.demo@daganta.com' },
     update: {
       name: 'Demo Store Owner',
-      authUserId: 'owner-demo-auth-id',
+      authUserId: null,
     },
     create: {
       id: demoOwnerId,
       email: 'owner.demo@daganta.com',
       name: 'Demo Store Owner',
-      authUserId: 'owner-demo-auth-id',
+      authUserId: null,
     },
   });
   console.log('Demo Owner UserProfile seeded:', demoOwner.email);
