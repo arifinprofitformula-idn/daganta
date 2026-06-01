@@ -132,12 +132,7 @@ export default function ProductCard({
           {/* Action CTA Button */}
           <Link 
             href={`/p/${product.slug}`}
-            className="w-full py-2.5 px-4 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border transition-all text-white shadow-md shadow-slate-100 hover:shadow-lg"
-            style={{ 
-              backgroundColor: primaryColor, 
-              borderColor: primaryColor,
-              '--hover-bg': hoverColor
-            } as React.CSSProperties}
+            className="w-full py-2.5 px-4 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border transition-all text-white shadow-md shadow-slate-100 hover:shadow-lg bg-[var(--primary)] border-[var(--primary)] hover:bg-[var(--primary-hover)] hover:border-[var(--primary-hover)]"
           >
             <span>Lihat Detail</span>
             <svg className="w-3.5 h-3.5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth={2.5}>
