@@ -56,6 +56,9 @@
 40. Penyimpanan preferensi toko aktif dikelola menggunakan *Server-Side Cookie* `daganta_active_tenant_id` (`httpOnly`, `sameSite: "lax"`, `path: "/dashboard"`, `secure` di produksi, kadaluarsa 30 hari). Penggunaan `localStorage` di sisi klien dihindari demi integritas keamanan.
 41. Pengerasan otorisasi (*dashboard access hardening*) dipasang di `getActiveTenantContext()`. Sistem memvalidasi UUID toko pada cookie terhadap daftar keanggotaan `TenantMember` sah milik user di database. Jika tidak cocok (cookie palsu, termanipulasi, atau milik toko lain), sistem mengabaikan cookie, menghapus cookie dari browser devtools, dan fallback otomatis ke keanggotaan toko pertama yang sah milik pengguna.
 42. Daftar toko yang dikirimkan ke klien (`availableTenants`) dipotong ketat murni hanya menyertakan kolom dasar visual (`id`, `name`, `slug`, `subdomain`, `status`) guna memitigasi kebocoran metadata internal (seperti `ownerId` atau ID user). Aksi beralih toko dikelola secara server-side melalui Server Action `switchActiveTenantAction` yang memvalidasi otorisasi hak akses sebelum memperbarui cookie.
-
-
-
+43. Pembangunan modul Manajemen Produk & Kategori (v0.2A) dilakukan sepenuhnya tanpa memodifikasi berkas `schema.prisma` dan tanpa memicu database migration/push fisik ke database.
+44. Mutasi data bisnis (Create, Edit, Deactivate) dikunci secara ketat di tingkat server menggunakan saringan tenant-scoped (`tenantId` dari `getActiveTenantContext()`). Input `tenantId` dari sisi klien sama sekali tidak digunakan sebagai penentu kebenaran (source of truth).
+45. Aksi deaktifasi diimplementasikan sebagai soft-delete yang aman: status produk berubah menjadi `ARCHIVED` dan kolom `isActive` kategori disetel `false`. Hal ini mempertahankan integritas relasi historis transaksi.
+46. Pengelolaan varian produk dilakukan dengan pembuatan otomatis varian default `"Standar"` sewaktu pembuatan produk, serta melakukan sinkronisasi otomatis detail harga, stok, berat, dan SKU saat pengeditan produk. Hal ini memberikan kemudahan antarmuka bagi pengguna UMKM.
+47. Setiap mutasi yang berhasil di sisi server dicatat secara transaksional ke tabel `AuditLog` dengan detail ID aktor (`actorId`) dan ID tenant (`tenantId`) guna menunjang transparansi sistem.
+48. Generator slug otomatis dikonfigurasikan agar aman dan unik per tenant dengan mendeteksi duplikasi terlebih dahulu, lalu otomatis menyematkan akhiran pembeda numerik jika terjadi benturan nama.
