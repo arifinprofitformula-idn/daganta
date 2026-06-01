@@ -211,7 +211,7 @@ export default function TrackClient({ tenant, initialOrderNumber = '' }: TrackCl
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs">
                 <div className="space-y-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Informasi Penerima</span>
-                  <p className="text-slate-700 font-medium">Nama: <strong className="text-slate-800">{order.customerName}</strong></p>
+                  <p className="text-slate-700 font-medium">Nama: <strong className="text-slate-800">Data pembeli berhasil diverifikasi.</strong></p>
                   <p className="text-slate-700 font-medium">WhatsApp: <strong className="text-slate-800">{order.customerPhoneMasked}</strong></p>
                   <p className="text-slate-700 font-medium">Email: <strong className="text-slate-800">{order.customerEmailMasked}</strong></p>
                 </div>

@@ -28,7 +28,6 @@ export interface SafeOrderResult {
   createdAt: Date;
   status: string;
   grandTotal: number;
-  customerName: string;
   customerPhoneMasked: string;
   customerEmailMasked: string;
   items: SafeOrderItem[];
@@ -143,20 +142,26 @@ export async function trackOrderAction(
     const customerEmail = order.customer.email?.trim().toLowerCase() || '';
     const customerPhoneRaw = order.customer.phone.trim();
     
-    // Check if input matches email
+    // Check if input matches email (exact case-insensitive match)
     const isEmailMatch = customerEmail !== '' && inputClean === customerEmail;
     
-    // Check if input matches phone
-    const normalizedInput = normalizePhone(contact);
-    const normalizedStored = normalizePhone(customerPhoneRaw);
+    // Check if input is treated as phone (does not contain '@')
+    const isTreatedAsPhone = !contact.includes('@');
     
-    // Safety guard: reject phone input if it's too short (less than 8 digits)
-    const isPhoneInputValid = normalizedInput.length >= 8;
-    
-    const isPhoneMatch = isPhoneInputValid && (
-      normalizedInput === normalizedStored || 
-      (normalizedStored.length >= 8 && normalizedInput.slice(-8) === normalizedStored.slice(-8))
-    );
+    let isPhoneMatch = false;
+    if (isTreatedAsPhone) {
+      const normalizedInput = normalizePhone(contact);
+      const normalizedStored = normalizePhone(customerPhoneRaw);
+      
+      // Reject contact input with fewer than 10 digits if treated as phone
+      if (normalizedInput.length >= 10) {
+        if (normalizedInput === normalizedStored) {
+          isPhoneMatch = true;
+        } else if (normalizedStored.length >= 10 && normalizedInput.slice(-10) === normalizedStored.slice(-10)) {
+          isPhoneMatch = true;
+        }
+      }
+    }
 
     if (!isEmailMatch && !isPhoneMatch) {
       return {
@@ -171,7 +176,6 @@ export async function trackOrderAction(
       createdAt: order.createdAt,
       status: order.status,
       grandTotal: Number(order.grandTotal),
-      customerName: order.customer.name,
       customerPhoneMasked: maskPhone(order.customer.phone),
       customerEmailMasked: maskEmail(order.customer.email),
       items: order.items.map((item) => ({
