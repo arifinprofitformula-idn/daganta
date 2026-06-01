@@ -27,3 +27,6 @@
 16. Entitas fungsional lanjutan (`Agent`, `AgentClient`, `Plan`, `Subscription`, `AgentCreditBalance`, `AgentCreditLedger`, `Domain`, `Payment`, `Shipment`, `NotificationEvent`) ditunda dan dipindahkan ke fase v0.1B.
 17. Seluruh data bisnis utama wajib memiliki `tenantId` dan terisolasi dengan tenant-scope index.
 18. Berkas `prisma/schema.prisma` v0.1A dideklarasikan locked dan valid secara offline, tanpa ada eksekusi database fisik (`prisma db push` atau migrasi) pada fase ini.
+19. Migrasi awal ke Supabase Dev (v0.1A) sukses dilakukan menggunakan `prisma/migrations/20260601035742_init_v01a_foundation/`.
+20. Database fisik yang dimodifikasi hanya Supabase Dev/Staging. Database Production tidak disentuh sama sekali.
+21. RLS policy akan dibuat pada fase terpisah setelah demo seed data selesai dilakukan.

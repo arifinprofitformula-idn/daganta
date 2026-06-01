@@ -1,10 +1,13 @@
 # DATABASE_FOUNDATION.md
 
 > [!IMPORTANT]
-> **Status: LOCKED & VALIDATED (Database Schema v0.1A)**
-> - Kerangka skema database dasar v0.1A telah dikunci dan divalidasi secara lokal pada tanggal 2026-06-01.
+> **Status: MIGRATED TO DEV (Database Schema v0.1A)**
+> - Kerangka skema database dasar v0.1A telah berhasil dimigrasikan ke Supabase Dev pada tanggal 2026-06-01.
 > - Berkas skema tersimpan di [schema.prisma](file:///c:/laragon/www/daganta/prisma/schema.prisma).
-> - Belum ada migrasi fisik (`prisma migrate`) atau pembaruan database (`prisma db push`) yang dijalankan pada fase ini.
+> - Folder migrasi fisik: [20260601035742_init_v01a_foundation](file:///c:/laragon/www/daganta/prisma/migrations/20260601035742_init_v01a_foundation/).
+> - Prisma Client berhasil digenerate.
+> - Belum ada RLS policy yang diterapkan pada fase ini.
+> - Belum ada data awal (seed data) yang dimasukkan.
 
 ## 1. Purpose
 
