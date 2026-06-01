@@ -161,6 +161,7 @@ export default function StorefrontHome({
             <button onClick={() => scrollToSection(productsRef)} className="hover:text-[var(--primary)] transition-colors">Produk</button>
             <button onClick={() => scrollToSection(aboutRef)} className="hover:text-[var(--primary)] transition-colors">Tentang Kami</button>
             <button onClick={() => scrollToSection(faqRef)} className="hover:text-[var(--primary)] transition-colors">FAQ</button>
+            <Link href="/track" className="hover:text-[var(--primary)] transition-colors">Cek Pesanan</Link>
           </nav>
 
           {/* Actions Block */}
@@ -761,8 +762,10 @@ export default function StorefrontHome({
       <footer className="border-t border-slate-100 bg-white py-8 text-center text-[11px] text-slate-400">
         <div className="max-w-7xl mx-auto px-6 space-y-2">
           <p>&copy; {new Date().getFullYear()} {tenant.name}. Seluruh hak cipta dilindungi.</p>
-          <p className="text-[9px] text-slate-350">
-            Didukung oleh <a href="https://daganta.store" className="hover:underline text-[var(--primary)] font-bold">Daganta Storefront Platform</a>
+          <p className="text-[9px] text-slate-350 space-x-2">
+            <Link href="/track" className="hover:underline text-[var(--primary)] font-bold">Lacak Pesanan</Link>
+            <span>·</span>
+            <span>Didukung oleh <a href="https://daganta.store" className="hover:underline text-[var(--primary)] font-bold">Daganta Storefront Platform</a></span>
           </p>
         </div>
       </footer>

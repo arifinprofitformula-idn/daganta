@@ -275,6 +275,16 @@ export default async function SuccessPage({ params }: PageProps) {
                 </p>
               </div>
             )}
+
+            {/* Order Tracking CTA */}
+            <div className="space-y-3 pt-2">
+              <Link
+                href={`/track?order=${order.orderNumber}`}
+                className="w-full py-4 px-6 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-md text-center hover:scale-[1.01] block"
+              >
+                Cek Status Pesanan
+              </Link>
+            </div>
           </div>
 
         </div>

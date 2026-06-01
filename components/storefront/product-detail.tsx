@@ -236,6 +236,13 @@ export default function ProductDetail({
             </Link>
 
             <Link 
+              href="/track"
+              className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-650 hover:text-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow-md"
+            >
+              Cek Pesanan
+            </Link>
+
+            <Link 
               href="/"
               className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-650 hover:text-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow-md"
             >
@@ -481,8 +488,10 @@ export default function ProductDetail({
       <footer className="border-t border-slate-100 bg-white py-8 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-6 space-y-2">
           <p>&copy; {new Date().getFullYear()} {tenant.name}. Seluruh hak cipta dilindungi.</p>
-          <p className="text-[10px] text-slate-350">
-            Didukung oleh <a href="https://daganta.store" className="hover:underline text-[var(--primary)] font-bold">Daganta Storefront Platform</a>
+          <p className="text-[10px] text-slate-350 space-x-2">
+            <Link href="/track" className="hover:underline text-[var(--primary)] font-bold">Lacak Pesanan</Link>
+            <span>·</span>
+            <span>Didukung oleh <a href="https://daganta.store" className="hover:underline text-[var(--primary)] font-bold">Daganta Storefront Platform</a></span>
           </p>
         </div>
       </footer>
