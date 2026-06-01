@@ -37,3 +37,7 @@
     - Localhost dan `127.0.0.1` dipetakan sebagai `MARKETING_SITE`/development context.
     - Subdomain tenant seperti `toyanusantara.daganta.store` dan `demostore.daganta.store` berhasil resolve ke tenant terkait dengan pemetaan mode akses yang aman (`STOREFRONT_FULL`, `STOREFRONT_READONLY`, `BLOCKED`).
     - Seluruh query produk wajib menyertakan `tenantId` secara mutlak melalui tenant-scoped data access layer guna menjaga isolasi data.
+24. Implementasi Storefront Shell (v0.1E) difokuskan penuh hanya pada Storefront Shell dan Marketing Home, menunda pembuatan Dashboard Shell serta fitur transaksional lainnya (cart, checkout, payment, shipping, login, custom domain automation).
+25. Transaksi pembelian WhatsApp-first diimplementasikan sebagai tombol CTA "Beli via WhatsApp" yang bersifat non-fungsional placeholder tanpa memakai nomor riil dan tanpa membuat checkout.
+26. Seluruh skema database (`schema.prisma`) dan berkas konfigurasi `.env` / `.env.local` tidak diubah, serta tidak ada migrasi atau database command destruktif yang dijalankan.
+27. Seluruh verifikasi fungsionalitas (Host: `daganta.store` untuk Marketing, `toyanusantara.daganta.store` untuk Toya Storefront dengan 3 produk, `demostore.daganta.store` untuk Demo Storefront kosong, dan `unknown.daganta.store` untuk Toko Tidak Ditemukan) terbukti berhasil dikompilasi (`npm run build`) dan berjalan sukses di lingkungan lokal (`npm run dev`).
