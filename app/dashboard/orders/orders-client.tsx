@@ -16,8 +16,8 @@ import {
   Search,
   MessageSquare
 } from 'lucide-react';
-import { OrderStatus } from '@prisma/client';
-import { updateOrderStatusAction } from './actions';
+import { OrderStatus, PaymentMethod, PaymentProvider, PaymentStatus } from '@prisma/client';
+import { updateOrderPaymentStatusAction, updateOrderStatusAction } from './actions';
 
 interface OrderItem {
   id: string;
@@ -47,6 +47,19 @@ interface Order {
     email: string | null;
     address: string | null;
   } | null;
+  payment: {
+    id: string;
+    provider: PaymentProvider;
+    method: PaymentMethod;
+    status: PaymentStatus;
+    amount: number;
+    proofNote: string | null;
+    adminNote: string | null;
+    verifiedAt: string | null;
+    rejectedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
   items: OrderItem[];
 }
 
@@ -63,6 +76,17 @@ const statusOptions = [
   { value: OrderStatus.CANCELED, label: 'Dibatalkan', color: 'bg-rose-950/40 text-rose-450 border border-rose-500/10' },
 ];
 
+const paymentStatusOptions = [
+  { value: PaymentStatus.WAITING_PAYMENT, label: 'Menunggu Pembayaran', color: 'bg-amber-950/40 text-amber-400 border border-amber-500/20' },
+  { value: PaymentStatus.WAITING_VERIFICATION, label: 'Menunggu Verifikasi', color: 'bg-blue-950/40 text-blue-400 border border-blue-500/20' },
+  { value: PaymentStatus.VERIFIED, label: 'Pembayaran Terverifikasi', color: 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20' },
+  { value: PaymentStatus.REJECTED, label: 'Pembayaran Ditolak', color: 'bg-rose-950/40 text-rose-400 border border-rose-500/20' },
+];
+
+const paymentMethodLabels: Record<PaymentMethod, string> = {
+  [PaymentMethod.MANUAL_TRANSFER]: 'Transfer Manual',
+};
+
 export default function OrdersClient({ orders, tenantName }: OrdersClientProps) {
   const router = useRouter();
 
@@ -74,6 +98,10 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
   const [modalStatus, setModalStatus] = useState<OrderStatus | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [paymentAdminNote, setPaymentAdminNote] = useState('');
+  const [paymentUpdateError, setPaymentUpdateError] = useState<string | null>(null);
+  const [paymentUpdateSuccess, setPaymentUpdateSuccess] = useState(false);
+  const [isPaymentUpdating, setIsPaymentUpdating] = useState(false);
 
   // Format helper
   const formatRupiah = (value: number) => {
@@ -94,6 +122,15 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
     );
   };
 
+  const getPaymentStatusBadge = (status: PaymentStatus) => {
+    const matched = paymentStatusOptions.find(opt => opt.value === status);
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wide ${matched?.color || 'bg-slate-800 text-slate-350 border border-slate-700/50'}`}>
+        {matched?.label || status}
+      </span>
+    );
+  };
+
   // Filter & Search Logic
   const filteredOrders = orders.filter((order) => {
     const matchesTab = activeTab === 'ALL' || order.status === activeTab;
@@ -107,16 +144,22 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
   const handleOpenDetail = (order: Order) => {
     setSelectedOrder(order);
     setModalStatus(order.status);
+    setPaymentAdminNote(order.payment?.adminNote || '');
     setUpdateError(null);
     setUpdateSuccess(false);
+    setPaymentUpdateError(null);
+    setPaymentUpdateSuccess(false);
   };
 
   const handleCloseDetail = () => {
-    if (isUpdating) return;
+    if (isUpdating || isPaymentUpdating) return;
     setSelectedOrder(null);
     setModalStatus(null);
+    setPaymentAdminNote('');
     setUpdateError(null);
     setUpdateSuccess(false);
+    setPaymentUpdateError(null);
+    setPaymentUpdateSuccess(false);
   };
 
   const handleUpdateStatus = async (e: React.FormEvent) => {
@@ -149,6 +192,59 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
       setUpdateError('Terjadi kesalahan tidak terduga.');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (newStatus: PaymentStatus) => {
+    if (!selectedOrder || !selectedOrder.payment || isPaymentUpdating) return;
+
+    setIsPaymentUpdating(true);
+    setPaymentUpdateError(null);
+    setPaymentUpdateSuccess(false);
+
+    try {
+      const res = await updateOrderPaymentStatusAction(selectedOrder.id, newStatus, paymentAdminNote);
+
+      if (res.success) {
+        setPaymentUpdateSuccess(true);
+        const nowIso = new Date().toISOString();
+        setSelectedOrder((prev) => {
+          if (!prev || !prev.payment) return prev;
+
+          const nextOrderStatus =
+            newStatus === PaymentStatus.VERIFIED && prev.status === OrderStatus.PENDING_PAYMENT
+              ? OrderStatus.PROCESSING
+              : prev.status;
+
+          return {
+            ...prev,
+            status: nextOrderStatus,
+            payment: {
+              ...prev.payment,
+              status: newStatus,
+              adminNote: paymentAdminNote.trim() || null,
+              verifiedAt: newStatus === PaymentStatus.VERIFIED ? nowIso : null,
+              rejectedAt: newStatus === PaymentStatus.REJECTED ? nowIso : null,
+            },
+          };
+        });
+        if (newStatus === PaymentStatus.VERIFIED && selectedOrder.status === OrderStatus.PENDING_PAYMENT) {
+          setModalStatus(OrderStatus.PROCESSING);
+        }
+
+        router.refresh();
+
+        setTimeout(() => {
+          setPaymentUpdateSuccess(false);
+        }, 1500);
+      } else {
+        setPaymentUpdateError(res.error || 'Gagal memperbarui status pembayaran.');
+      }
+    } catch (err: any) {
+      console.error('Update payment status client error:', err);
+      setPaymentUpdateError('Terjadi kesalahan tidak terduga.');
+    } finally {
+      setIsPaymentUpdating(false);
     }
   };
 
@@ -424,7 +520,108 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
                   </div>
                 </div>
 
-                {/* B. Update Status Panel */}
+                {/* B. Validasi Pembayaran */}
+                <div className="bg-slate-950/40 border border-slate-850/80 rounded-2xl p-5 space-y-4">
+                  <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider pb-2 border-b border-slate-850 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                    Validasi Pembayaran
+                  </h3>
+
+                  {selectedOrder.payment ? (
+                    <div className="space-y-4 text-xs">
+                      {paymentUpdateError && (
+                        <div className="p-3 bg-rose-950/30 border border-rose-500/20 text-rose-400 rounded-xl text-[10.5px] font-semibold leading-normal">
+                          {paymentUpdateError}
+                        </div>
+                      )}
+
+                      {paymentUpdateSuccess && (
+                        <div className="p-3 bg-emerald-950/30 border border-emerald-500/20 text-emerald-400 rounded-xl text-[10.5px] font-semibold leading-normal">
+                          Status pembayaran berhasil diperbarui.
+                        </div>
+                      )}
+
+                      <div className="space-y-3 text-slate-400 font-medium">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Status Pembayaran</span>
+                          {getPaymentStatusBadge(selectedOrder.payment.status)}
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Metode Pembayaran</span>
+                          <span className="text-slate-200 font-bold">{paymentMethodLabels[selectedOrder.payment.method]}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span>Amount</span>
+                          <span className="text-indigo-400 font-black select-all">{formatRupiah(selectedOrder.payment.amount)}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl text-amber-300 text-[10.5px] font-semibold leading-relaxed">
+                        Instruksi pembayaran manual akan dikonfirmasi oleh admin toko melalui WhatsApp.
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label htmlFor="payment-admin-note" className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                          Catatan Admin
+                        </label>
+                        <textarea
+                          id="payment-admin-note"
+                          value={paymentAdminNote}
+                          onChange={(e) => setPaymentAdminNote(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold text-slate-200 placeholder:text-slate-600 outline-none focus:border-indigo-500 transition-colors resize-none"
+                          placeholder="Tambahkan catatan validasi pembayaran..."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2">
+                        {selectedOrder.payment.status === PaymentStatus.REJECTED ? (
+                          <button
+                            type="button"
+                            disabled={isPaymentUpdating}
+                            onClick={() => handleUpdatePaymentStatus(PaymentStatus.WAITING_PAYMENT)}
+                            className="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all"
+                          >
+                            Tandai Menunggu Pembayaran
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isPaymentUpdating || selectedOrder.payment.status !== PaymentStatus.WAITING_PAYMENT}
+                            onClick={() => handleUpdatePaymentStatus(PaymentStatus.WAITING_VERIFICATION)}
+                            className="w-full py-2.5 px-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all"
+                          >
+                            Tandai Menunggu Verifikasi
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={isPaymentUpdating || selectedOrder.payment.status !== PaymentStatus.WAITING_VERIFICATION}
+                          onClick={() => handleUpdatePaymentStatus(PaymentStatus.VERIFIED)}
+                          className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all"
+                        >
+                          Verifikasi Pembayaran
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isPaymentUpdating || selectedOrder.payment.status !== PaymentStatus.WAITING_VERIFICATION}
+                          onClick={() => handleUpdatePaymentStatus(PaymentStatus.REJECTED)}
+                          className="w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all"
+                        >
+                          Tolak Pembayaran
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                      Belum ada catatan pembayaran.
+                    </p>
+                  )}
+                </div>
+
+                {/* C. Update Status Panel */}
                 <div className="bg-slate-950/40 border border-slate-850/80 rounded-2xl p-5 space-y-4">
                   <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider pb-2 border-b border-slate-850 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-400" />

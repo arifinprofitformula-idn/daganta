@@ -5,6 +5,7 @@ import { resolveTenantFromHost } from '../../../../lib/tenant/resolve-tenant';
 import { prisma } from '../../../../lib/prisma';
 import { getTenantThemeConfig, TenantThemeConfig } from '../../../../lib/tenant/theme-config';
 import MarketingHome from '../../../../components/marketing/marketing-home';
+import { PaymentStatus } from '@prisma/client';
 
 interface PageProps {
   params: Promise<{
@@ -40,6 +41,7 @@ export default async function SuccessPage({ params }: PageProps) {
     include: {
       customer: true,
       items: true,
+      payment: true,
     },
   });
 
@@ -96,6 +98,13 @@ export default async function SuccessPage({ params }: PageProps) {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  const paymentStatusLabels: Record<PaymentStatus, string> = {
+    [PaymentStatus.WAITING_PAYMENT]: 'Menunggu Pembayaran',
+    [PaymentStatus.WAITING_VERIFICATION]: 'Menunggu Verifikasi',
+    [PaymentStatus.VERIFIED]: 'Pembayaran Terverifikasi',
+    [PaymentStatus.REJECTED]: 'Pembayaran Ditolak',
   };
 
   // 4. Buat URL WhatsApp dinamis jika ada
@@ -178,7 +187,21 @@ export default async function SuccessPage({ params }: PageProps) {
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Detail Pesanan</span>
               <p className="text-slate-600 font-medium">Nomor Pesanan: <strong className="text-slate-800">{order.orderNumber}</strong></p>
               <p className="text-slate-600 font-medium">Tanggal: <span className="text-slate-800 font-bold">{new Date(order.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></p>
-              <p className="text-slate-600 font-medium">Status: <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-500/10 font-bold text-[9px] uppercase tracking-wide">Menunggu Pembayaran</span></p>
+              <p className="text-slate-600 font-medium">
+                Status Pembayaran:{' '}
+                {order.payment ? (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-500/10 font-bold text-[9px] uppercase tracking-wide">
+                    {paymentStatusLabels[order.payment.status]}
+                  </span>
+                ) : (
+                  <span className="text-slate-500 font-bold">Status pembayaran belum tersedia.</span>
+                )}
+              </p>
+              {order.payment && (
+                <p className="text-slate-600 font-medium">
+                  Total Pembayaran: <strong className="text-slate-800">{formatRupiah(Number(order.payment.amount))}</strong>
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -222,9 +245,15 @@ export default async function SuccessPage({ params }: PageProps) {
               <h4 className="font-black uppercase tracking-wider text-amber-800 text-[10px] flex items-center gap-1.5">
                 <span>⚠️ Instruksi Pembayaran Manual</span>
               </h4>
-              <p className="text-amber-850">
-                Instruksi pembayaran manual akan dikonfirmasi oleh admin toko melalui WhatsApp.
-              </p>
+              {order.payment ? (
+                <p className="text-amber-850">
+                  Instruksi pembayaran manual akan dikonfirmasi oleh admin toko melalui WhatsApp.
+                </p>
+              ) : (
+                <p className="text-amber-850">
+                  Status pembayaran belum tersedia.
+                </p>
+              )}
             </div>
 
             {/* WhatsApp CTA (only visible if tenant phone exists) */}

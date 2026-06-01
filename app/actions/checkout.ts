@@ -3,7 +3,8 @@
 import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
 import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, PaymentMethod, PaymentProvider } from '@prisma/client';
+import { manualPaymentAdapter } from '../../lib/payments';
 
 interface CheckoutItemPayload {
   id: string; // productId
@@ -211,6 +212,17 @@ export async function processCheckout(payload: CheckoutPayload) {
           shippingCost: 0,
           discountTotal: 0,
           notes: notes?.trim() || null,
+        },
+      });
+
+      await tx.orderPayment.create({
+        data: {
+          tenantId: tenant.id,
+          orderId: newOrder.id,
+          provider: PaymentProvider.MANUAL,
+          method: PaymentMethod.MANUAL_TRANSFER,
+          status: manualPaymentAdapter.createInitialStatus(),
+          amount: newOrder.grandTotal,
         },
       });
 

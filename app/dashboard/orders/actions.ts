@@ -3,7 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus } from '@prisma/client';
+
+const allowedPaymentTransitions: Record<PaymentStatus, PaymentStatus[]> = {
+  [PaymentStatus.WAITING_PAYMENT]: [PaymentStatus.WAITING_VERIFICATION],
+  [PaymentStatus.WAITING_VERIFICATION]: [PaymentStatus.VERIFIED, PaymentStatus.REJECTED],
+  [PaymentStatus.VERIFIED]: [],
+  [PaymentStatus.REJECTED]: [PaymentStatus.WAITING_PAYMENT],
+};
 
 export async function updateOrderStatusAction(orderId: string, newStatus: OrderStatus) {
   try {
@@ -68,6 +75,130 @@ export async function updateOrderStatusAction(orderId: string, newStatus: OrderS
     return {
       success: false,
       error: error.message || 'Terjadi kesalahan sistem saat memperbarui status pesanan.',
+    };
+  }
+}
+
+export async function updateOrderPaymentStatusAction(orderId: string, newStatus: PaymentStatus, adminNote?: string) {
+  try {
+    const tenantCtx = await getActiveTenantContext();
+    if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant || !tenantCtx.userProfile) {
+      return { success: false, error: 'Sesi kedaluwarsa atau Anda tidak diizinkan mengakses halaman ini.' };
+    }
+
+    const tenant = tenantCtx.activeTenant;
+    const actor = tenantCtx.userProfile;
+    const cleanAdminNote = adminNote?.trim() || null;
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        tenantId: tenant.id,
+      },
+      include: {
+        payment: true,
+      },
+    });
+
+    if (!order) {
+      return { success: false, error: 'Pesanan tidak ditemukan atau berada di luar wewenang kelola Anda.' };
+    }
+
+    if (!order.payment) {
+      return { success: false, error: 'Belum ada catatan pembayaran untuk pesanan ini.' };
+    }
+
+    const previousPaymentStatus = order.payment.status;
+
+    if (previousPaymentStatus === newStatus) {
+      return { success: true, message: 'Status pembayaran sudah sesuai.' };
+    }
+
+    if (!allowedPaymentTransitions[previousPaymentStatus].includes(newStatus)) {
+      return {
+        success: false,
+        error: 'Perubahan status pembayaran tidak valid untuk kondisi pembayaran saat ini.',
+      };
+    }
+
+    const now = new Date();
+    const previousOrderStatus = order.status;
+    let nextOrderStatus = order.status;
+
+    if (newStatus === PaymentStatus.VERIFIED && order.status === OrderStatus.PENDING_PAYMENT) {
+      nextOrderStatus = OrderStatus.PROCESSING;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.orderPayment.update({
+        where: {
+          id: order.payment!.id,
+        },
+        data: {
+          status: newStatus,
+          adminNote: cleanAdminNote,
+          verifiedAt: newStatus === PaymentStatus.VERIFIED ? now : null,
+          rejectedAt: newStatus === PaymentStatus.REJECTED ? now : null,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          actorId: actor.id,
+          action: 'UPDATE_PAYMENT_STATUS',
+          entityType: 'ORDER_PAYMENT',
+          entityId: order.payment!.id,
+          metadata: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            paymentId: order.payment!.id,
+            previousPaymentStatus,
+            newPaymentStatus: newStatus,
+            adminNote: cleanAdminNote,
+          },
+        },
+      });
+
+      if (nextOrderStatus !== previousOrderStatus) {
+        await tx.order.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            status: nextOrderStatus,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            tenantId: tenant.id,
+            actorId: actor.id,
+            action: 'UPDATE_ORDER_STATUS_FROM_PAYMENT',
+            entityType: 'ORDER',
+            entityId: order.id,
+            metadata: {
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              paymentId: order.payment!.id,
+              previousOrderStatus,
+              newOrderStatus: nextOrderStatus,
+              previousPaymentStatus,
+              newPaymentStatus: newStatus,
+            },
+          },
+        });
+      }
+    });
+
+    revalidatePath('/dashboard/orders');
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update payment status error:', error);
+    return {
+      success: false,
+      error: error.message || 'Terjadi kesalahan sistem saat memperbarui status pembayaran.',
     };
   }
 }

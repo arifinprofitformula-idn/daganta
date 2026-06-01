@@ -42,6 +42,21 @@ export default async function Page() {
           weightGram: true,
         },
       },
+      payment: {
+        select: {
+          id: true,
+          provider: true,
+          method: true,
+          status: true,
+          amount: true,
+          proofNote: true,
+          adminNote: true,
+          verifiedAt: true,
+          rejectedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',
@@ -60,6 +75,21 @@ export default async function Page() {
     notes: order.notes,
     createdAt: order.createdAt.toISOString(),
     customer: order.customer,
+    payment: order.payment
+      ? {
+          id: order.payment.id,
+          provider: order.payment.provider,
+          method: order.payment.method,
+          status: order.payment.status,
+          amount: Number(order.payment.amount),
+          proofNote: order.payment.proofNote,
+          adminNote: order.payment.adminNote,
+          verifiedAt: order.payment.verifiedAt?.toISOString() || null,
+          rejectedAt: order.payment.rejectedAt?.toISOString() || null,
+          createdAt: order.payment.createdAt.toISOString(),
+          updatedAt: order.payment.updatedAt.toISOString(),
+        }
+      : null,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
