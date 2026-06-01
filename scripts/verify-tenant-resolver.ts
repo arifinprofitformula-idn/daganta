@@ -84,6 +84,7 @@ async function runVerification() {
   await testCase('demostore.daganta.store');
   await testCase('unknown.daganta.store');
   await testCase('daganta.store');
+  await testCase('daganta-staging-git-main-arifinprofitformula-idns-projects.vercel.app');
   
   console.log(`\n========================================`);
   console.log('Verification completed successfully.');

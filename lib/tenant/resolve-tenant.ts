@@ -29,7 +29,13 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
       'www.127.0.0.1'
     ]);
 
-    if (marketingSites.has(cleanHost)) {
+    // Check for Vercel preview hosts
+    const vercelUrl = process.env.VERCEL_URL ? process.env.VERCEL_URL.trim().split(':')[0].toLowerCase() : '';
+    const isVercelPreview =
+      (vercelUrl && cleanHost === vercelUrl) ||
+      (cleanHost.endsWith('.vercel.app') && cleanHost.includes('daganta-staging'));
+
+    if (marketingSites.has(cleanHost) || isVercelPreview) {
       return {
         status: 'MARKETING_SITE',
         accessMode: 'MARKETING_SITE',
