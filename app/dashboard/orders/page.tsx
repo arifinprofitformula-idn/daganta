@@ -1,48 +1,99 @@
 import React from 'react';
-import { ShoppingCart, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
+import { prisma } from '@/lib/prisma';
+import OrdersClient from './orders-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  // Defensive auth check
+  // 1. Dapatkan konteks toko aktif dari sesi pengelola
   const tenantCtx = await getActiveTenantContext();
   if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
-    return null;
+    return null; // Layout induk dashboard_shell menangani pembatasan
   }
 
+  const tenant = tenantCtx.activeTenant;
+
+  // 2. Query seluruh pesanan aktif (Strict Tenant Isolation)
+  const dbOrders = await prisma.order.findMany({
+    where: {
+      tenantId: tenant.id,
+    },
+    include: {
+      customer: {
+        select: {
+          name: true,
+          phone: true,
+          email: true,
+          address: true,
+        },
+      },
+      items: {
+        select: {
+          id: true,
+          productId: true,
+          variantId: true,
+          productNameSnapshot: true,
+          variantNameSnapshot: true,
+          quantity: true,
+          unitPrice: true,
+          totalPrice: true,
+          weightGram: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  // 3. Serialisasi Decimal -> number untuk mencegah Next.js Serialization error di Client Component
+  const serializedOrders = dbOrders.map((order) => ({
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    subtotal: Number(order.subtotal),
+    shippingCost: Number(order.shippingCost),
+    discountTotal: Number(order.discountTotal),
+    grandTotal: Number(order.grandTotal),
+    notes: order.notes,
+    createdAt: order.createdAt.toISOString(),
+    customer: order.customer,
+    items: order.items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      variantId: item.variantId,
+      productNameSnapshot: item.productNameSnapshot,
+      variantNameSnapshot: item.variantNameSnapshot,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+      totalPrice: Number(item.totalPrice),
+      weightGram: item.weightGram,
+    })),
+  }));
+
   return (
-    <div className="space-y-6 select-none">
+    <div className="space-y-6">
       {/* Header Info */}
-      <div className="flex items-center justify-between border-b border-slate-900 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-900 pb-5">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">Pesanan Masuk</h1>
-          <p className="text-xs text-slate-500 mt-1">Daftar seluruh pesanan pembeli yang terhubung dengan WhatsApp toko Anda</p>
-        </div>
-
-        {/* Refresh Placeholder */}
-        <button
-          type="button"
-          disabled
-          className="inline-flex items-center gap-2 py-2 px-3 bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold rounded-lg cursor-not-allowed select-none"
-        >
-          <RefreshCw className="w-3.5 h-3.5 shrink-0" />
-          <span>Muat Ulang</span>
-        </button>
-      </div>
-
-      {/* Empty State */}
-      <div className="py-24 flex flex-col items-center justify-center text-center space-y-5 max-w-md mx-auto bg-slate-900 border border-slate-850 rounded-2xl p-8 shadow-xl">
-        <div className="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-500 shadow-inner">
-          <ShoppingCart className="w-6 h-6 shrink-0" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="font-bold text-slate-200 text-sm">Belum Ada Pesanan</h3>
-          <p className="text-slate-450 text-[11px] leading-relaxed">
-            Saat ini toko Anda belum menerima transaksi pembelian apa pun. Semua pesanan yang dikirimkan pembeli melalui tombol "Beli via WhatsApp" di storefront akan muncul di sini.
+          <p className="text-xs text-slate-500 mt-1">
+            Daftar seluruh pesanan pembeli yang masuk di etalase toko <span className="text-indigo-350 font-extrabold">{tenant.name}</span>
           </p>
         </div>
+
+        {/* Dynamic Context Info */}
+        <div className="flex items-center gap-3 select-none">
+          <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-3 py-2 rounded-xl">
+            Toko: {tenant.name} ({tenant.subdomain})
+          </span>
+        </div>
       </div>
+
+      {/* Orders Dashboard client content */}
+      <OrdersClient orders={serializedOrders} tenantName={tenant.name} />
     </div>
   );
 }
