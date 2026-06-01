@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { BillingCycle, InvoiceStatus, SubscriptionStatus, TenantStatus } from '@prisma/client';
+import { InvoiceStatus, SubscriptionStatus, TenantStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import { canManageBillingManually, canUseBillingPaymentSimulation } from '@/lib/billing/access';
@@ -113,6 +113,7 @@ export async function createManualInvoiceAction(formData: FormData) {
       data: {
         tenantId,
         subscriptionId: subscription.id,
+        planId: plan.id,
         invoiceNumber: buildInvoiceNumber(activeTenant.slug),
         status: InvoiceStatus.UNPAID,
         billingCycle: plan.billingCycle,
@@ -169,37 +170,61 @@ export async function simulateInvoicePaymentAction(formData: FormData) {
       },
       include: {
         subscription: true,
+        plan: true,
       },
     });
 
-    if (!invoice || !invoice.subscriptionId || !invoice.subscription) {
+    if (!invoice) {
       throw new Error('Tagihan belum dibayar tidak ditemukan untuk toko ini.');
     }
 
-    const plan = await tx.subscriptionPlan.findUniqueOrThrow({
-      where: { id: invoice.subscription.planId },
-    });
+    const plan = invoice.plan;
     const periodStart = invoice.periodStart || now;
     const periodEnd = invoice.periodEnd || addMonths(periodStart, plan.activeMonths);
     const gracePeriodEndsAt = addDays(periodEnd, plan.gracePeriodDays);
+    let subscription = invoice.subscription;
+
+    if (!subscription) {
+      subscription = await tx.tenantSubscription.findFirst({
+        where: { tenantId },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    const previousPlanId = subscription?.planId || null;
+
+    if (subscription) {
+      await tx.tenantSubscription.update({
+        where: { id: subscription.id },
+        data: {
+          planId: invoice.planId,
+          status: SubscriptionStatus.ACTIVE,
+          billingCycle: invoice.billingCycle,
+          currentPeriodStart: periodStart,
+          currentPeriodEnd: periodEnd,
+          gracePeriodEndsAt,
+        },
+      });
+    } else {
+      subscription = await tx.tenantSubscription.create({
+        data: {
+          tenantId,
+          planId: invoice.planId,
+          status: SubscriptionStatus.ACTIVE,
+          billingCycle: invoice.billingCycle,
+          currentPeriodStart: periodStart,
+          currentPeriodEnd: periodEnd,
+          gracePeriodEndsAt,
+        },
+      });
+    }
 
     await tx.invoice.update({
       where: { id: invoice.id },
       data: {
+        subscriptionId: subscription.id,
         status: InvoiceStatus.PAID,
         paidAt: now,
-      },
-    });
-
-    await tx.tenantSubscription.update({
-      where: { id: invoice.subscriptionId },
-      data: {
-        planId: plan.id,
-        status: SubscriptionStatus.ACTIVE,
-        billingCycle: invoice.billingCycle || BillingCycle.MONTHLY,
-        currentPeriodStart: periodStart,
-        currentPeriodEnd: periodEnd,
-        gracePeriodEndsAt,
       },
     });
 
@@ -223,8 +248,11 @@ export async function simulateInvoicePaymentAction(formData: FormData) {
         entityId: invoice.id,
         metadata: {
           invoiceNumber: invoice.invoiceNumber,
-          subscriptionId: invoice.subscriptionId,
+          subscriptionId: subscription.id,
           amount: invoice.amount.toString(),
+          previousPlanId,
+          newPlanId: invoice.planId,
+          newPlanCode: plan.code,
           allowedFlow: canUseBillingPaymentSimulation(tenantCtx) ? 'dev_demo_or_internal' : 'blocked',
         },
       },

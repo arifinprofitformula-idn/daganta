@@ -56,8 +56,10 @@ enum BillingCycle {
 enum SubscriptionStatus {
   TRIAL
   ACTIVE
+  EXPIRING_SOON
   GRACE_PERIOD
-  LIMITED
+  LIMITED_MODE
+  SUSPENDED
   CANCELED
 }
 
@@ -380,6 +382,7 @@ model SubscriptionPlan {
   updatedAt           DateTime     @updatedAt
 
   subscriptions TenantSubscription[]
+  invoices      Invoice[]            @relation("InvoicePlan")
 }
 
 model TenantSubscription {
@@ -409,6 +412,7 @@ model Invoice {
   id                   String        @id @default(uuid())
   tenantId             String
   subscriptionId       String?
+  planId               String
   invoiceNumber        String
   status               InvoiceStatus @default(DRAFT)
   billingCycle         BillingCycle
@@ -427,11 +431,13 @@ model Invoice {
 
   tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   subscription TenantSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  plan         SubscriptionPlan    @relation("InvoicePlan", fields: [planId], references: [id])
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([subscriptionId])
+  @@index([planId])
 }
 
 // ==========================================

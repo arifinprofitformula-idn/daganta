@@ -33,8 +33,10 @@ export function getSubscriptionStatusLabel(status: SubscriptionStatus) {
   const labels: Record<SubscriptionStatus, string> = {
     TRIAL: 'Masa coba aktif',
     ACTIVE: 'Aktif',
+    EXPIRING_SOON: 'Masa aktif segera berakhir',
     GRACE_PERIOD: 'Masa tenggang',
-    LIMITED: 'Checkout sementara dibatasi',
+    LIMITED_MODE: 'Checkout sementara dibatasi',
+    SUSPENDED: 'Dibatalkan Sistem',
     CANCELED: 'Dibatalkan',
   };
 

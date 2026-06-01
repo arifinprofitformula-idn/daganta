@@ -45,7 +45,7 @@ export default async function Page() {
     }),
     prisma.invoice.findMany({
       where: { tenantId: tenant.id },
-      include: { subscription: { include: { plan: true } } },
+      include: { plan: true, subscription: { include: { plan: true } } },
       orderBy: { issuedAt: 'desc' },
       take: 8,
     }),
@@ -53,7 +53,7 @@ export default async function Page() {
 
   const activePlan = subscription?.plan;
   const productLimit = activePlan?.productLimit || 0;
-  const productUsageText = productLimit > 0 ? `${productCount} dari ${productLimit} produk` : `${productCount} produk`;
+  const productUsageText = productLimit > 0 ? `Produk terpakai: ${productCount} / ${productLimit}` : `Produk terpakai: ${productCount}`;
   const canCreateInvoice = canManageBillingManually(tenantCtx);
   const canSimulatePayment = canUseBillingPaymentSimulation(tenantCtx);
 
@@ -221,7 +221,7 @@ export default async function Page() {
                         {getBillingCycleLabel(invoice.billingCycle)} · {formatDate(invoice.periodStart)} sampai {formatDate(invoice.periodEnd)}
                       </p>
                       <p className="mt-2 text-xs text-slate-500">
-                        {invoice.paymentInstructions || PAYMENT_INSTRUCTION_PLACEHOLDER}
+                        {invoice.paymentInstructions || PAYMENT_INSTRUCTION_PLACEHOLDER} Konfirmasi pembayaran akan diverifikasi oleh admin Daganta.
                       </p>
                     </div>
 

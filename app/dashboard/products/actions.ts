@@ -72,6 +72,30 @@ export async function createProductAction(input: {
     }
   }
 
+  const activeSubscription = await prisma.tenantSubscription.findFirst({
+    where: { tenantId },
+    include: { plan: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!activeSubscription?.plan) {
+    return { success: false, error: 'Paket toko belum tersedia. Silakan hubungi admin Daganta.' };
+  }
+
+  const productCount = await prisma.product.count({
+    where: {
+      tenantId,
+      status: { not: ProductStatus.ARCHIVED },
+    },
+  });
+
+  if (productCount >= activeSubscription.plan.productLimit) {
+    return {
+      success: false,
+      error: 'Batas produk paket Anda sudah tercapai. Silakan naikkan paket untuk menambah produk baru.',
+    };
+  }
+
   // 3. Generate slug aman dan unik per tenant
   const baseSlug = slugify(input.name);
   let uniqueSlug = baseSlug || 'produk';

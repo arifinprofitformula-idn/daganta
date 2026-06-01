@@ -159,6 +159,7 @@ async function ensureTrialSubscription(tenantId: string, actorId: string, create
     },
     update: {
       subscriptionId: subscription.id,
+      planId: starterPlan.id,
       status: InvoiceStatus.DRAFT,
       billingCycle: BillingCycle.MONTHLY,
       amount: '0',
@@ -171,6 +172,7 @@ async function ensureTrialSubscription(tenantId: string, actorId: string, create
     create: {
       tenantId,
       subscriptionId: subscription.id,
+      planId: starterPlan.id,
       invoiceNumber: `INV-${tenantId.slice(0, 8)}-TRIAL`,
       status: InvoiceStatus.DRAFT,
       billingCycle: BillingCycle.MONTHLY,

@@ -10,7 +10,11 @@ export function canUseBillingPaymentSimulation(tenantCtx: TenantContext) {
     ? DEMO_TENANT_SLUGS.has(tenantCtx.activeTenant.slug)
     : false;
 
-  return isDevelopment || isSuperAdmin || isDemoTenant;
+  if (process.env.NODE_ENV === 'production') {
+    return isSuperAdmin;
+  }
+
+  return isDevelopment || isDemoTenant || isSuperAdmin;
 }
 
 export function canManageBillingManually(tenantCtx: TenantContext) {
