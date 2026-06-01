@@ -30,3 +30,4 @@
 19. Migrasi awal ke Supabase Dev (v0.1A) sukses dilakukan menggunakan `prisma/migrations/20260601035742_init_v01a_foundation/`.
 20. Database fisik yang dimodifikasi hanya Supabase Dev/Staging. Database Production tidak disentuh sama sekali.
 21. RLS policy akan dibuat pada fase terpisah setelah demo seed data selesai dilakukan.
+22. Seeding data awal untuk tenant demo (Toya Nusantara, Demo Store) dan data wilayah logistik minimal telah berhasil dimasukkan pada tanggal 2026-06-01 menggunakan `prisma/seed.ts` dan pustaka `tsx`.
