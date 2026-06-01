@@ -88,6 +88,13 @@ enum PaymentStatus {
   REJECTED
 }
 
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
 // ==========================================
 // IDENTITY & ACCESS
 // ==========================================
@@ -298,6 +305,26 @@ model OrderPayment {
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, orderId])
+}
+
+model WebhookEvent {
+  id               String             @id @default(uuid())
+  provider         PaymentProvider
+  eventType        String
+  eventId          String?
+  idempotencyKey   String
+  status           WebhookEventStatus @default(RECEIVED)
+  payload          Json
+  sanitizedHeaders Json?
+  errorMessage     String?            @db.Text
+  receivedAt       DateTime           @default(now())
+  processedAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([provider, idempotencyKey])
+  @@index([provider, status])
+  @@index([receivedAt])
 }
 
 model OrderItem {
