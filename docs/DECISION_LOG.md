@@ -31,3 +31,9 @@
 20. Database fisik yang dimodifikasi hanya Supabase Dev/Staging. Database Production tidak disentuh sama sekali.
 21. RLS policy akan dibuat pada fase terpisah setelah demo seed data selesai dilakukan.
 22. Seeding data awal untuk tenant demo (Toya Nusantara, Demo Store) dan data wilayah logistik minimal telah berhasil dimasukkan pada tanggal 2026-06-01 menggunakan `prisma/seed.ts` dan pustaka `tsx`.
+23. Arsitektur penyelesaian tenant dan isolasi data diimplementasikan pada tanggal 2026-06-01 dengan keputusan:
+    - Tenant resolver menggunakan hostname/subdomain untuk mengidentifikasi tenant.
+    - Root domain `daganta.store` dan `www.daganta.store` dipetakan sebagai `MARKETING_SITE`.
+    - Localhost dan `127.0.0.1` dipetakan sebagai `MARKETING_SITE`/development context.
+    - Subdomain tenant seperti `toyanusantara.daganta.store` dan `demostore.daganta.store` berhasil resolve ke tenant terkait dengan pemetaan mode akses yang aman (`STOREFRONT_FULL`, `STOREFRONT_READONLY`, `BLOCKED`).
+    - Seluruh query produk wajib menyertakan `tenantId` secara mutlak melalui tenant-scoped data access layer guna menjaga isolasi data.

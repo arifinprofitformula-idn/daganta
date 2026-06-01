@@ -1,13 +1,14 @@
 # DATABASE_FOUNDATION.md
 
 > [!IMPORTANT]
-> **Status: MIGRATED TO DEV (Database Schema v0.1A)**
+> **Status: RESOLVER & ACCESS LAYER COMPLETE (Phase v0.1D)**
 > - Kerangka skema database dasar v0.1A telah berhasil dimigrasikan ke Supabase Dev pada tanggal 2026-06-01.
 > - Berkas skema tersimpan di [schema.prisma](file:///c:/laragon/www/daganta/prisma/schema.prisma).
 > - Folder migrasi fisik: [20260601035742_init_v01a_foundation](file:///c:/laragon/www/daganta/prisma/migrations/20260601035742_init_v01a_foundation/).
 > - Prisma Client berhasil digenerate.
 > - Belum ada RLS policy yang diterapkan pada fase ini.
 > - Data awal (seed data) untuk tenant demo Toya Nusantara dan wilayah logistik minimal telah berhasil dimasukkan secara lokal/Dev pada tanggal 2026-06-01 menggunakan [seed.ts](file:///c:/laragon/www/daganta/prisma/seed.ts).
+> - **Tenant Resolver & Data Access Layer (v0.1D)**: Telah selesai diimplementasikan secara aman pada tanggal 2026-06-01. Host resolver terbukti berhasil menyaring port, menangani situs pemasaran utama (`daganta.store`, `localhost`, `127.0.0.1`), memetakan status tenant ke mode akses storefront (`STOREFRONT_FULL`, `STOREFRONT_READONLY`, `BLOCKED`), dan membatasi penarikan produk secara ketat berbasis `tenantId`.
 
 ## 1. Purpose
 
