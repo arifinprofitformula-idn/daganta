@@ -22,7 +22,7 @@ export default function DashboardShell({
   children 
 }: DashboardShellProps) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans antialiased overflow-hidden">
+    <div className="min-h-screen bg-brand-slate-bg text-brand-navy flex font-sans antialiased overflow-hidden">
       {/* Dynamic Sidebar */}
       <Sidebar tenantName={tenantName} />
 
@@ -38,7 +38,7 @@ export default function DashboardShell({
         />
 
         {/* Content Body */}
-        <main className="flex-1 overflow-y-auto bg-slate-950 p-8">
+        <main className="flex-1 overflow-y-auto bg-brand-slate-bg p-8">
           <div className="max-w-7xl mx-auto w-full space-y-8">
             {children}
           </div>

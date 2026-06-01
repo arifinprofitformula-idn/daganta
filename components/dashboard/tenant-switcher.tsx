@@ -17,9 +17,9 @@ export default function TenantSwitcher({ activeTenant, availableTenants }: Tenan
   // Jika hanya memiliki 1 toko, tampilkan label statis saja (disabled)
   if (availableTenants.length <= 1) {
     return (
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-bold text-slate-350 select-none">
-        <Store className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-        <span>Toko Aktif: <strong className="text-indigo-300 font-extrabold">{activeTenant.name}</strong></span>
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-brand-border rounded-xl text-[10px] font-bold text-slate-700 select-none">
+        <Store className="w-3.5 h-3.5 text-brand-blue shrink-0" />
+        <span>Toko Aktif: <strong className="text-brand-navy font-extrabold">{activeTenant.name}</strong></span>
       </div>
     );
   }
@@ -37,24 +37,24 @@ export default function TenantSwitcher({ activeTenant, availableTenants }: Tenan
           });
         }}
       >
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl transition-all relative">
-          <Store className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Pilih Toko:</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-brand-border rounded-xl transition-all relative">
+          <Store className="w-3.5 h-3.5 text-brand-blue shrink-0" />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0">Pilih Toko:</span>
           
           <select
             name="tenantId"
             defaultValue={activeTenant.id}
             disabled={isPending}
-            className="bg-transparent text-indigo-300 font-extrabold text-[10px] pr-5 focus:outline-none cursor-pointer appearance-none shrink-0"
+            className="bg-transparent text-brand-navy font-extrabold text-[10px] pr-5 focus:outline-none cursor-pointer appearance-none shrink-0"
           >
             {availableTenants.map((t) => (
-              <option key={t.id} value={t.id} className="bg-slate-900 text-slate-200">
+              <option key={t.id} value={t.id} className="bg-white text-slate-800">
                 {t.name}
               </option>
             ))}
           </select>
           
-          <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none shrink-0" />
+          <ChevronDown className="w-3 h-3 text-slate-500 absolute right-2.5 top-2.5 pointer-events-none shrink-0" />
         </div>
       </form>
     </div>
