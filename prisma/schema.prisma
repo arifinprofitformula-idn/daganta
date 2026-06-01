@@ -95,6 +95,31 @@ enum WebhookEventStatus {
   FAILED
 }
 
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+  INTERNAL
+}
+
+enum NotificationEventStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  CANCELED
+}
+
+enum NotificationEventType {
+  ORDER_CREATED
+  PAYMENT_WAITING_VERIFICATION
+  PAYMENT_VERIFIED
+  PAYMENT_REJECTED
+  ORDER_STATUS_UPDATED
+  TENANT_SUBSCRIPTION_EXPIRING
+  TENANT_SUBSCRIPTION_EXPIRED
+}
+
+
 // ==========================================
 // IDENTITY & ACCESS
 // ==========================================
@@ -143,6 +168,7 @@ model Tenant {
   addresses         Address[]
   subscriptions     TenantSubscription[]
   invoices          Invoice[]
+  notificationEvents NotificationEvent[]
 }
 
 model TenantMember {
@@ -255,6 +281,7 @@ model Customer {
   regency  Regency?  @relation(fields: [regencyId], references: [id], onDelete: SetNull)
   district District? @relation(fields: [districtId], references: [id], onDelete: SetNull)
   orders   Order[]
+  notificationEvents NotificationEvent[]
 
   @@index([tenantId]) // Indeks tenant untuk performa query
 }
@@ -278,6 +305,7 @@ model Order {
   customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items    OrderItem[]
   payment  OrderPayment?
+  notificationEvents NotificationEvent[]
 
   @@unique([tenantId, orderNumber])
   @@index([tenantId]) // Indeks tenant untuk performa query
@@ -532,4 +560,36 @@ model AuditLog {
   actor  UserProfile? @relation("UserActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([tenantId]) // Indeks tenant untuk performa query
+}
+
+model NotificationEvent {
+  id            String                  @id @default(uuid())
+  tenantId      String?
+  orderId       String?
+  customerId    String?
+  channel       NotificationChannel
+  type          NotificationEventType
+  status        NotificationEventStatus @default(PENDING)
+  recipient     String?
+  subject       String?
+  message       String                  @db.Text
+  payload       Json?
+  attemptCount  Int                     @default(0)
+  maxAttempts   Int                     @default(3)
+  nextAttemptAt DateTime?
+  sentAt        DateTime?
+  failedAt      DateTime?
+  lastError     String?                 @db.Text
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  // Relations
+  tenant        Tenant?                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order         Order?                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer      Customer?               @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([status, nextAttemptAt])
+  @@index([type])
+  @@index([orderId])
 }

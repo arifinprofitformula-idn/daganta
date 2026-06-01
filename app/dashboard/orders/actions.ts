@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
-import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus, NotificationChannel, NotificationEventType } from '@prisma/client';
+import { createNotificationEvent } from '@/lib/notifications/create-event';
 
 const allowedPaymentTransitions: Record<PaymentStatus, PaymentStatus[]> = {
   [PaymentStatus.WAITING_PAYMENT]: [PaymentStatus.WAITING_VERIFICATION],
@@ -97,6 +98,7 @@ export async function updateOrderPaymentStatusAction(orderId: string, newStatus:
       },
       include: {
         payment: true,
+        customer: true,
       },
     });
 
@@ -186,6 +188,46 @@ export async function updateOrderPaymentStatusAction(orderId: string, newStatus:
               previousPaymentStatus,
               newPaymentStatus: newStatus,
             },
+          },
+        });
+      }
+
+      // Create transaction-safe NotificationEvent if matching life-cycle states
+      if (newStatus === PaymentStatus.WAITING_VERIFICATION) {
+        await createNotificationEvent(tx, {
+          tenantId: tenant.id,
+          orderId: order.id,
+          customerId: order.customerId,
+          channel: NotificationChannel.INTERNAL,
+          type: NotificationEventType.PAYMENT_WAITING_VERIFICATION,
+          recipient: order.customer?.phone || null,
+          params: {
+            orderNumber: order.orderNumber,
+          },
+        });
+      } else if (newStatus === PaymentStatus.VERIFIED) {
+        await createNotificationEvent(tx, {
+          tenantId: tenant.id,
+          orderId: order.id,
+          customerId: order.customerId,
+          channel: NotificationChannel.INTERNAL,
+          type: NotificationEventType.PAYMENT_VERIFIED,
+          recipient: order.customer?.phone || null,
+          params: {
+            orderNumber: order.orderNumber,
+          },
+        });
+      } else if (newStatus === PaymentStatus.REJECTED) {
+        await createNotificationEvent(tx, {
+          tenantId: tenant.id,
+          orderId: order.id,
+          customerId: order.customerId,
+          channel: NotificationChannel.INTERNAL,
+          type: NotificationEventType.PAYMENT_REJECTED,
+          recipient: order.customer?.phone || null,
+          params: {
+            orderNumber: order.orderNumber,
+            reason: cleanAdminNote || undefined,
           },
         });
       }

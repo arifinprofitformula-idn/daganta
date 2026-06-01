@@ -3,8 +3,9 @@
 import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
 import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
-import { OrderStatus, PaymentMethod, PaymentProvider } from '@prisma/client';
+import { OrderStatus, PaymentMethod, PaymentProvider, NotificationChannel, NotificationEventType } from '@prisma/client';
 import { manualPaymentAdapter } from '../../lib/payments';
+import { createNotificationEvent } from '../../lib/notifications/create-event';
 
 interface CheckoutItemPayload {
   id: string; // productId
@@ -257,6 +258,21 @@ export async function processCheckout(payload: CheckoutPayload) {
             buyerPhone: phone.trim(),
             totalAmount: calculatedSubtotal,
           },
+        },
+      });
+
+      // f. Buat NotificationEvent untuk ORDER_CREATED
+      await createNotificationEvent(tx, {
+        tenantId: tenant.id,
+        orderId: newOrder.id,
+        customerId: customer.id,
+        channel: NotificationChannel.INTERNAL,
+        type: NotificationEventType.ORDER_CREATED,
+        recipient: phone.trim(),
+        params: {
+          buyerName: name.trim(),
+          orderNumber: newOrder.orderNumber,
+          amount: newOrder.grandTotal,
         },
       });
 
