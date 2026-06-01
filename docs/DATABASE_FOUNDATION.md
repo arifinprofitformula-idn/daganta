@@ -1,17 +1,19 @@
 # DATABASE_FOUNDATION.md
 
 > [!IMPORTANT]
-> **Status: DASHBOARD SHELL COMPLETE (Phase v0.1G)**
+> **Status: BASIC AUTH & SESSION PROTECTION COMPLETE (Phase v0.1H)**
 > - Kerangka skema database dasar v0.1A telah berhasil dimigrasikan ke Supabase Dev pada tanggal 2026-06-01.
 > - Berkas skema tersimpan di [schema.prisma](file:///c:/laragon/www/daganta/prisma/schema.prisma).
 > - Folder migrasi fisik: [20260601035742_init_v01a_foundation](file:///c:/laragon/www/daganta/prisma/migrations/20260601035742_init_v01a_foundation/).
 > - Prisma Client berhasil digenerate.
 > - Belum ada RLS policy yang diterapkan secara fisik pada database pada fase ini (tetap berstatus draf aman).
-> - Data awal (seed data) untuk tenant demo Toya Nusantara dan wilayah logistik minimal telah berhasil dimasukkan secara lokal/Dev pada tanggal 2026-06-01 menggunakan [seed.ts](file:///c:/laragon/www/daganta/prisma/seed.ts).
+> - Data awal (seed data) untuk tenant demo Toya Nusantara dan wilayah logistik minimal telah berhasil dimasukkan secara lokal/Dev pada tanggal 2026-06-01 menggunakan [seed.ts](file:///c:/laragon/ts/daganta/prisma/seed.ts).
 > - **Tenant Resolver & Data Access Layer (v0.1D)**: Telah selesai diimplementasikan secara aman pada tanggal 2026-06-01. Host resolver terbukti berhasil menyaring port, menangani situs pemasaran utama (`daganta.store`, `localhost`, `127.0.0.1`), memetakan status tenant ke mode akses storefront (`STOREFRONT_FULL`, `STOREFRONT_READONLY`, `BLOCKED`), dan membatasi penarikan produk secara ketat berbasis `tenantId`.
 > - **Storefront Shell (v0.1E)**: Telah selesai diimplementasikan dan diverifikasi secara sukses pada tanggal 2026-06-01. Host resolver terbukti berhasil menyaring port, menangani situs pemasaran utama (`daganta.store`), memetakan status tenant ke mode akses storefront, membatasi penarikan produk secara ketat berbasis `tenantId`, dan menampilkan halaman etalase Toya Nusantara dengan 3 produk, halaman Demo Store dengan empty state, serta halaman Toko Tidak Ditemukan dengan aman dan rapi.
 > - **RLS Policy Planning & Migration Draft (v0.1F)**: Draf rencana RLS dan berkas DDL SQL untuk Supabase/PostgreSQL telah selesai disusun di [docs/RLS_POLICY_PLAN.md](file:///c:/laragon/www/daganta/docs/RLS_POLICY_PLAN.md) and [docs/sql/rls_v01f_draft.sql](file:///c:/laragon/www/daganta/docs/sql/rls_v01f_draft.sql). Seluruh kebijakan diklasifikasikan dengan jelas (Public, Storefront Limited, Private) menggunakan helper function `SECURITY DEFINER` bebas rekursi, serta mendokumentasikan mitigasi bypass Prisma server-side. Kebijakan ini berstatus sebagai draf rancangan yang siap direview dan belum diterapkan ke database fisik.
 > - **Dashboard Shell (v0.1G)**: Halaman dasbor visual untuk pemilik toko (*tenant owner*) telah berhasil diimplementasikan penuh menggunakan Bahasa Indonesia terintegrasi data demo tenant **Toya Nusantara** secara dinamis dari database. Seluruh halaman (/dashboard, /dashboard/products dengan 3 produk terdaftar, /dashboard/orders, /dashboard/customers, /dashboard/billing, /dashboard/settings) terbukti sukses dikompilasi (`npm run build`) dan berhasil lolos uji verifikasi rute HTTP server lokal.
+> - **Basic Auth & Session Protection (v0.1H)**: Fondasi Supabase Auth SSR berbasis cookies menggunakan `@supabase/ssr` dan Next.js 15 async `cookies()` telah selesai diimplementasikan. Rute `/dashboard` sekarang terproteksi secara otomatis dengan *Server-Side Redirect* ke `/login` bagi pengguna tidak terotentikasi, sedangkan pengguna terotentikasi dapat masuk dasbor dengan email aktif ditampilkan di Topbar dan verifikasi linkage profil toko (`UserProfile`) secara otomatis.
+
 
 
 
