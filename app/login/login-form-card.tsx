@@ -9,12 +9,14 @@ import {
   Lock, 
   ShieldAlert,
   ArrowRight,
-  Check
+  Check,
+  CheckCircle
 } from 'lucide-react';
 import { login } from './actions';
 
 interface LoginFormCardProps {
   errorMsg?: string;
+  infoMsg?: string;
 }
 
 function SubmitButton() {
@@ -44,7 +46,7 @@ function SubmitButton() {
   );
 }
 
-export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
+export default function LoginFormCard({ errorMsg, infoMsg }: LoginFormCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -72,6 +74,17 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
           </p>
         </div>
       </div>
+
+      {/* Info/Success Alert Display */}
+      {infoMsg && (
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3 text-xs text-emerald-700 leading-normal animate-in fade-in slide-in-from-top-4 duration-300">
+          <CheckCircle className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold text-emerald-800 block">Registrasi Sukses</span>
+            <span className="font-medium">{infoMsg}</span>
+          </div>
+        </div>
+      )}
 
       {/* Error Alert Display */}
       {errorMsg && (

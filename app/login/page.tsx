@@ -15,7 +15,7 @@ import {
 export default async function Page({ 
   searchParams 
 }: { 
-  searchParams: Promise<{ error?: string }> 
+  searchParams: Promise<{ error?: string; message?: string }> 
 }) {
   // 1. Jika pengguna sudah login, langsung alihkan ke dasbor
   const user = await getCurrentUser();
@@ -23,9 +23,10 @@ export default async function Page({
     redirect('/dashboard');
   }
 
-  // 2. Dapatkan parameter error secara asinkron (Next.js 15)
+  // 2. Dapatkan parameter secara asinkron (Next.js 15)
   const resolvedSearchParams = await searchParams;
   const errorMsg = resolvedSearchParams.error;
+  const infoMsg = resolvedSearchParams.message;
 
   return (
     <main className="min-h-screen w-full flex bg-gradient-to-br from-[#F8FAFC] via-[#EEF6FF] to-[#F8FAFC] text-brand-navy relative overflow-hidden font-sans select-none">
@@ -194,7 +195,7 @@ export default async function Page({
           <div className="w-full flex-1 flex flex-col justify-center items-center py-6">
             
             {/* Main Interactive Login Form Card */}
-            <LoginFormCard errorMsg={errorMsg} />
+            <LoginFormCard errorMsg={errorMsg} infoMsg={infoMsg} />
 
           </div>
 

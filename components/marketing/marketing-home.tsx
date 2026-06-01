@@ -195,7 +195,7 @@ export default function MarketingHome() {
               Masuk
             </a>
             <a 
-              href="/login?register=true" 
+              href="/signup?plan=starter" 
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-[#2563EB]/15 hover:shadow-lg transform hover:-translate-y-0.5"
             >
               Coba Gratis 14 Hari
@@ -267,7 +267,7 @@ export default function MarketingHome() {
                 Masuk
               </a>
               <a 
-                href="/login?register=true" 
+                href="/signup?plan=starter" 
                 className="w-full text-center py-3 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold rounded-xl transition-all shadow-md"
               >
                 Coba Gratis 14 Hari
@@ -310,7 +310,7 @@ export default function MarketingHome() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <a 
-                href="/login?register=true"
+                href="/signup?plan=starter"
                 className="w-full sm:w-auto px-8 py-4 bg-[#2563EB] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white font-bold rounded-2xl transition-all shadow-xl shadow-[#2563EB]/20 hover:shadow-2xl transform hover:-translate-y-0.5 text-center text-base"
               >
                 Coba Gratis 14 Hari
@@ -644,7 +644,7 @@ export default function MarketingHome() {
 
           <div className="text-center pt-12">
             <a 
-              href="/login?register=true" 
+              href="/signup?plan=starter" 
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#2563EB]/15 transform hover:-translate-y-0.5"
             >
               <span>Mulai Buat Webstore</span>
@@ -773,10 +773,10 @@ export default function MarketingHome() {
 
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-4">
               <a 
-                href="/login?register=true" 
+                href="/agent-waitlist" 
                 className="w-full sm:w-auto px-8 py-4 bg-[#0B1F33] hover:bg-[#153454] text-white font-bold rounded-2xl text-center shadow-lg transition-all transform hover:-translate-y-0.5 text-base"
               >
-                Gabung Sebagai Agen Daganta
+                Daftar Minat Agen
               </a>
               <span className="text-xs text-[#64748B] font-semibold text-center sm:text-left">
                 Mendukung kemudahan kolaborasi digital terpercaya
@@ -1057,7 +1057,7 @@ export default function MarketingHome() {
 
               <div className="pt-8">
                 <a 
-                  href="/login?register=true" 
+                  href="/signup?plan=starter" 
                   className="block w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-[#0B1F33] text-xs font-extrabold rounded-xl text-center transition-colors"
                 >
                   Mulai Sekarang
@@ -1109,7 +1109,7 @@ export default function MarketingHome() {
 
               <div className="pt-8">
                 <a 
-                  href="/login?register=true" 
+                  href="/signup?plan=growth" 
                   className="block w-full py-3.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-extrabold rounded-xl text-center shadow-md shadow-[#2563EB]/15 transition-colors"
                 >
                   Pilih Paket Growth
@@ -1157,10 +1157,10 @@ export default function MarketingHome() {
 
               <div className="pt-8">
                 <a 
-                  href="/login?register=true" 
+                  href="/agent-waitlist" 
                   className="block w-full py-3.5 bg-[#0B1F33] hover:bg-[#153454] text-white text-xs font-extrabold rounded-xl text-center transition-colors"
                 >
-                  Pilih Paket Agen
+                  Daftar Minat Agen
                 </a>
               </div>
             </div>
@@ -1312,7 +1312,7 @@ export default function MarketingHome() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 max-w-md mx-auto">
               <a 
-                href="/login?register=true" 
+                href="/signup?plan=starter" 
                 className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-[#0B1F33] font-bold rounded-2xl text-center shadow-lg transition-all transform hover:-translate-y-0.5 text-base"
               >
                 Coba Gratis 14 Hari

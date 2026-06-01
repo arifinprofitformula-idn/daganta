@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import {
   ShoppingBag,
   ShoppingCart,
@@ -40,6 +41,31 @@ export default async function Page() {
   const orderCount = summary?.orderCount ?? 0;
   const customerCount = summary?.customerCount ?? 0;
   const isStoreActive = summary?.tenant.status === 'ACTIVE';
+
+  // v0.3F: Onboarding empty state if tenant has no products
+  if (productCount === 0) {
+    return (
+      <div className="max-w-xl mx-auto py-14 px-6 text-center space-y-6 bg-white border border-brand-border rounded-[24px] shadow-sm select-none font-sans my-8">
+        <div className="w-16 h-16 bg-blue-50 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-600 mx-auto shadow-sm text-2xl">
+          🚀
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-xl font-bold text-brand-navy">Selamat datang, toko Anda sudah aktif.</h1>
+          <p className="text-slate-500 text-xs font-semibold leading-relaxed max-w-sm mx-auto">
+            Mulai dengan menambahkan produk pertama Anda agar calon pelanggan dapat langsung berbelanja secara mandiri.
+          </p>
+        </div>
+        <div className="pt-2">
+          <Link
+            href="/dashboard/products/new"
+            className="inline-block py-3 px-6 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-blue-600/10 uppercase tracking-wider"
+          >
+            Tambah Produk Pertama
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // 3. Nama pengguna dinamis dari profil atau pecahan email
   const userName = tenantCtx.userProfile?.name || tenantCtx.user?.email?.split('@')[0] || 'Mitra';
