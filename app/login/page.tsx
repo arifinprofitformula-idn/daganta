@@ -193,37 +193,6 @@ export default async function Page({
           
           <div className="w-full flex-1 flex flex-col justify-center items-center py-6">
             
-            {/* Mobile Brand Header (Hidden on Desktop) */}
-            <div className="lg:hidden flex flex-col items-center text-center space-y-3 mb-6 select-none">
-              
-              {/* Dynamic Styled Logo */}
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="logo-mobile-gradient" x1="10" y1="4" x2="39" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#2563EB" />
-                      <stop offset="60%" stopColor="#38BDF8" />
-                      <stop offset="100%" stopColor="#14B8A6" />
-                    </linearGradient>
-                  </defs>
-                  <path 
-                    d="M8 6C8 4.89543 8.89543 4 10 4H20C29.9411 4 38 11.1612 38 20C38 28.8388 29.9411 36 20 36H10C8.89543 36 8 35.1046 8 34V6Z" 
-                    fill="#0B1F33" 
-                  />
-                  <path 
-                    d="M17 10V30C17 30.5523 17.4477 31 18 31C24.0751 31 29 26.0751 29 20C29 13.9249 24.0751 9 18 9C17.4477 9 17 9.44772 17 10Z" 
-                    fill="url(#logo-mobile-gradient)" 
-                  />
-                  <circle cx="18" cy="20" r="3.5" fill="#FFFFFF" />
-                </svg>
-              </div>
-
-              <div className="space-y-0.5">
-                <h3 className="text-lg font-bold text-brand-navy">Daganta</h3>
-                <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Mudah. Mandiri. Bertumbuh.</p>
-              </div>
-            </div>
-
             {/* Main Interactive Login Form Card */}
             <LoginFormCard errorMsg={errorMsg} />
 

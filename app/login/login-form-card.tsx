@@ -51,36 +51,22 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
     <div className="w-full max-w-[460px] bg-white rounded-[24px] p-8 md:p-10 shadow-[0_8px_30px_rgba(0,0,0,0.02)] border border-brand-border select-none">
       
       {/* Top Logo and Header */}
-      <div className="flex flex-col items-center text-center space-y-4 mb-8">
+      <div className="flex flex-col items-center text-center space-y-3 mb-6">
         
-        {/* Actual Styled Daganta Logo using Logo Color Palette */}
-        <div className="w-12 h-12 flex items-center justify-center relative">
-          <svg className="w-12 h-12" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="logo-d-gradient" x1="10" y1="4" x2="39" y2="36" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#2563EB" />
-                <stop offset="60%" stopColor="#38BDF8" />
-                <stop offset="100%" stopColor="#14B8A6" />
-              </linearGradient>
-            </defs>
-            {/* Geometric ribbon-like shape forming a modern letter D */}
-            <path 
-              d="M8 6C8 4.89543 8.89543 4 10 4H20C29.9411 4 38 11.1612 38 20C38 28.8388 29.9411 36 20 36H10C8.89543 36 8 35.1046 8 34V6Z" 
-              fill="#0B1F33" 
-            />
-            <path 
-              d="M17 10V30C17 30.5523 17.4477 31 18 31C24.0751 31 29 26.0751 29 20C29 13.9249 24.0751 9 18 9C17.4477 9 17 9.44772 17 10Z" 
-              fill="url(#logo-d-gradient)" 
-            />
-            <circle cx="18" cy="20" r="3.5" fill="#FFFFFF" />
-          </svg>
+        {/* Official Logo Brand Asset */}
+        <div className="w-32 h-auto flex items-center justify-center">
+          <img
+            src="/logo.png"
+            alt="Daganta Logo"
+            className="w-full h-auto object-contain"
+          />
         </div>
         
         <div className="space-y-1">
-          <h1 className="text-xl font-bold tracking-tight text-brand-navy">
+          <h1 className="text-lg font-bold tracking-tight text-brand-navy">
             Masuk ke Panel Daganta
           </h1>
-          <p className="text-slate-500 text-xs font-medium">
+          <p className="text-slate-500 text-xs font-semibold">
             Kelola toko Anda dengan lebih rapi dan mandiri
           </p>
         </div>
@@ -190,9 +176,9 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
         <button
           type="button"
           onClick={() => {}}
-          className="w-full h-12 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl border border-brand-border transition-all duration-200 flex items-center justify-center gap-3 text-sm focus:outline-none"
+          className="w-full h-12 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-705 font-semibold rounded-xl border border-brand-border transition-all duration-200 flex items-center justify-center gap-2.5 text-xs focus:outline-none"
         >
-          <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#EA4335"
               d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.15-3.15C17.45 1.76 14.93 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.8 2.95C6.2 7.2 8.85 5.04 12 5.04z"
@@ -210,7 +196,7 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
               d="M12 23c3.24 0 5.97-1.08 7.96-2.92l-3.7-2.87c-1.03.69-2.35 1.1-4.26 1.1-3.15 0-5.8-2.16-6.75-5.41L1.45 15.8C3.35 19.65 7.3 23 12 23z"
             />
           </svg>
-          <span className="font-medium text-slate-700 text-xs">Masuk dengan Google</span>
+          <span className="font-semibold text-slate-700">Masuk dengan Google</span>
         </button>
       </form>
 
