@@ -37,6 +37,8 @@ export default async function Layout({
       tenantName={tenantName}
       userEmail={tenantCtx.user.email || ''}
       hasProfile={true}
+      activeTenant={tenantCtx.activeTenant}
+      availableTenants={tenantCtx.availableTenants || []}
     >
       {children}
     </DashboardShell>

@@ -3,21 +3,31 @@
 import React from 'react';
 import { Sparkles, LogOut } from 'lucide-react';
 import { logout } from '@/app/login/actions';
+import TenantSwitcher from './tenant-switcher';
 
 interface TopbarProps {
   tenantName: string;
   userEmail: string;
   hasProfile: boolean;
+  activeTenant: { id: string; name: string } | null;
+  availableTenants: Array<{ id: string; name: string }>;
 }
 
-export default function Topbar({ tenantName, userEmail, hasProfile }: TopbarProps) {
+export default function Topbar({ 
+  tenantName, 
+  userEmail, 
+  hasProfile,
+  activeTenant,
+  availableTenants
+}: TopbarProps) {
   return (
     <header className="h-16 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-8 select-none">
-      {/* Active Store Status Info */}
+      {/* Active Store Status Dropdown Switcher */}
       <div className="flex items-center gap-3">
-        <span className="text-xs font-bold text-slate-300">
-          Kelola Toko: <span className="text-indigo-400 font-extrabold">{tenantName}</span>
-        </span>
+        <TenantSwitcher 
+          activeTenant={activeTenant} 
+          availableTenants={availableTenants} 
+        />
         
         {/* Dynamic Internal Demo Banner */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/30 border border-indigo-500/20 text-[10px] text-indigo-400 font-semibold tracking-wide">

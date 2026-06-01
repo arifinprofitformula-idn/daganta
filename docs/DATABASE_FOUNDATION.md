@@ -1,7 +1,7 @@
 # DATABASE_FOUNDATION.md
 
 > [!IMPORTANT]
-> **Status: AUTH LINKING & MEMBERSHIP ACCESS GUARD COMPLETE (Phase v0.1I)**
+> **Status: TENANT SWITCHER & ACCESS HARDENING COMPLETE (Phase v0.1J)**
 > - Kerangka skema database dasar v0.1A telah berhasil dimigrasikan ke Supabase Dev pada tanggal 2026-06-01.
 > - Berkas skema tersimpan di [schema.prisma](file:///c:/laragon/www/daganta/prisma/schema.prisma).
 > - Folder migrasi fisik: [20260601035742_init_v01a_foundation](file:///c:/laragon/www/daganta/prisma/migrations/20260601035742_init_v01a_foundation/).
@@ -14,6 +14,7 @@
 > - **Dashboard Shell (v0.1G)**: Halaman dasbor visual untuk pemilik toko (*tenant owner*) telah berhasil diimplementasikan penuh menggunakan Bahasa Indonesia terintegrasi data demo tenant **Toya Nusantara** secara dinamis dari database. Seluruh halaman (/dashboard, /dashboard/products dengan 3 produk terdaftar, /dashboard/orders, /dashboard/customers, /dashboard/billing, /dashboard/settings) terbukti sukses dikompilasi (`npm run build`) dan berhasil lolos uji verifikasi rute HTTP server lokal.
 > - **Basic Auth & Session Protection (v0.1H)**: Fondasi Supabase Auth SSR berbasis cookies menggunakan `@supabase/ssr` dan Next.js 15 async `cookies()` telah selesai diimplementasikan. Rute `/dashboard` sekarang terproteksi secara otomatis dengan *Server-Side Redirect* ke `/login` bagi pengguna tidak terotentikasi, sedangkan pengguna terotentikasi dapat masuk dasbor dengan email aktif ditampilkan di Topbar dan verifikasi linkage profil toko (`UserProfile`) secara otomatis.
 > - **Auth Linking & Membership Access Guard (v0.1I)**: Integrasi otorisasi terpusat pada dasbor telah selesai dipasang. Sistem mencakup auto-link aman sekali pakai (`updateMany` dengan filter `authUserId: null`) dari akun Supabase Auth ke profil database `UserProfile`, pemeriksaan keanggotaan `TenantMember` via helper `getActiveTenantContext()`, visualisasi kartu peringatan premium `AccountAccessState` untuk skenario tidak terhubung toko, serta penyaringan mutlak seluruh query dasbor berdasarkan `tenantId` keanggotaan aktif. Keseluruhan saringan Toya Nusantara sebagai data bebas dasbor telah dihilangkan.
+> - **Tenant Switcher & Dashboard Access Hardening (v0.1J)**: Sistem otorisasi pemindahan toko aktif terintegrasi Server-Side Cookies `daganta_active_tenant_id` dan Next.js Server Actions telah selesai dipasang. Logika access guard mengikutsertakan pengerasan keamanan berupa saringan validasi mutlak server-side, pembersihan otomatis cookie jika terdeteksi manipulasi/tidak sah, fallback aman otomatis ke keanggotaan toko pertama, serta pembatasan daftar visual `availableTenants` murni ke kolom aman terbebas dari metadata sensitif. Komponen dropdown visual `TenantSwitcher` telah terintegrasi dinamis pada Topbar.
 
 
 

@@ -8,6 +8,8 @@ interface DashboardShellProps {
   tenantName: string;
   userEmail: string;
   hasProfile: boolean;
+  activeTenant: { id: string; name: string; slug: string; subdomain: string } | null;
+  availableTenants: Array<{ id: string; name: string; slug: string; subdomain: string }>;
   children: React.ReactNode;
 }
 
@@ -15,6 +17,8 @@ export default function DashboardShell({
   tenantName, 
   userEmail, 
   hasProfile, 
+  activeTenant,
+  availableTenants,
   children 
 }: DashboardShellProps) {
   return (
@@ -29,6 +33,8 @@ export default function DashboardShell({
           tenantName={tenantName} 
           userEmail={userEmail} 
           hasProfile={hasProfile} 
+          activeTenant={activeTenant}
+          availableTenants={availableTenants}
         />
 
         {/* Content Body */}

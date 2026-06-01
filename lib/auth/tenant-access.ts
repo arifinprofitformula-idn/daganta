@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserProfile } from './session';
+import { getActiveTenantCookie, clearActiveTenantCookie } from './dashboard-tenant-cookie';
+
+export interface SafeTenantInfo {
+  id: string;
+  name: string;
+  slug: string;
+  subdomain: string;
+  status: string;
+}
 
 export interface TenantContext {
   status: 'SUCCESS' | 'NO_PROFILE' | 'NO_MEMBERSHIP';
@@ -10,21 +19,18 @@ export interface TenantContext {
     name: string | null;
     authUserId: string | null;
   } | null;
-  activeTenant: {
-    id: string;
-    name: string;
-    slug: string;
-    subdomain: string;
-  } | null;
+  activeTenant: SafeTenantInfo | null;
   activeMembership: {
     id: string;
     tenantId: string;
     userId: string;
     role: string;
   } | null;
+  availableTenants: SafeTenantInfo[] | null;
 }
 
 export async function getActiveTenantContext(): Promise<TenantContext> {
+  // 1. Dapatkan status sesi pengguna aktif beserta profil
   const authData = await getCurrentUserProfile();
   
   if (!authData || !authData.user) {
@@ -33,7 +39,8 @@ export async function getActiveTenantContext(): Promise<TenantContext> {
       user: null,
       userProfile: null,
       activeTenant: null,
-      activeMembership: null
+      activeMembership: null,
+      availableTenants: null
     };
   }
 
@@ -45,13 +52,14 @@ export async function getActiveTenantContext(): Promise<TenantContext> {
       user,
       userProfile: null,
       activeTenant: null,
-      activeMembership: null
+      activeMembership: null,
+      availableTenants: null
     };
   }
 
   const userProfile = authData.profile;
 
-  // Cari TenantMember berdasarkan UserProfile.id
+  // 2. Ambil daftar keanggotaan TenantMember milik pengguna dengan saringan field aman
   const memberships = await prisma.tenantMember.findMany({
     where: { userId: userProfile.id },
     include: {
@@ -61,6 +69,7 @@ export async function getActiveTenantContext(): Promise<TenantContext> {
           name: true,
           slug: true,
           subdomain: true,
+          status: true
         }
       }
     }
@@ -72,24 +81,59 @@ export async function getActiveTenantContext(): Promise<TenantContext> {
       user,
       userProfile,
       activeTenant: null,
-      activeMembership: null
+      activeMembership: null,
+      availableTenants: null
     };
   }
 
-  // Pilih membership pertama sebagai default aktif untuk v0.1I
-  // Catatan pengembangan: Pemindah toko (tenant switcher) ditunda ke fase berikutnya.
-  const activeMembership = memberships[0];
+  // Filter daftar toko aman (hanya data dasar bebas metadata sensitif)
+  const availableTenants: SafeTenantInfo[] = memberships.map(m => ({
+    id: m.tenant.id,
+    name: m.tenant.name,
+    slug: m.tenant.slug,
+    subdomain: m.tenant.subdomain,
+    status: m.tenant.status
+  }));
+
+  // 3. Baca preferensi dari cookie active tenant
+  const activeTenantCookieId = await getActiveTenantCookie();
+
+  let activeMembership = null;
+
+  if (activeTenantCookieId) {
+    // Cari apakah tenantId pada cookie ada dalam daftar keanggotaan sah milik user
+    activeMembership = memberships.find(m => m.tenantId === activeTenantCookieId) || null;
+    
+    // Jika tidak valid (manipulasi cookie, palsu, atau milik user lain), bersihkan cookie
+    if (!activeMembership) {
+      await clearActiveTenantCookie();
+    }
+  }
+
+  // 4. Mekanisme Fallback Otomatis: Jika cookie tidak ada atau tidak valid, pilih membership pertama
+  if (!activeMembership) {
+    activeMembership = memberships[0];
+  }
+
+  const activeTenant: SafeTenantInfo = {
+    id: activeMembership.tenant.id,
+    name: activeMembership.tenant.name,
+    slug: activeMembership.tenant.slug,
+    subdomain: activeMembership.tenant.subdomain,
+    status: activeMembership.tenant.status
+  };
 
   return {
     status: 'SUCCESS',
     user,
     userProfile,
-    activeTenant: activeMembership.tenant,
+    activeTenant,
     activeMembership: {
       id: activeMembership.id,
       tenantId: activeMembership.tenantId,
       userId: activeMembership.userId,
       role: activeMembership.role
-    }
+    },
+    availableTenants
   };
 }
