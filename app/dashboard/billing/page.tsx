@@ -13,6 +13,7 @@ import {
   PAYMENT_INSTRUCTION_PLACEHOLDER,
 } from '@/lib/billing/pricing';
 import { createManualInvoiceAction, simulateInvoicePaymentAction } from './actions';
+import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,7 @@ export default async function Page() {
     }),
   ]);
 
+  const policy = await getTenantSubscriptionPolicy(tenant.id);
   const activePlan = subscription?.plan;
   const productLimit = activePlan?.productLimit || 0;
   const productUsageText = productLimit > 0 ? `Produk terpakai: ${productCount} / ${productLimit}` : `Produk terpakai: ${productCount}`;
@@ -103,7 +105,7 @@ export default async function Page() {
             <InfoCard
               icon={<ShieldCheck className="h-4 w-4" />}
               label="Status paket"
-              value={subscription ? getSubscriptionStatusLabel(subscription.status) : 'Belum tersedia'}
+              value={policy ? getSubscriptionStatusLabel(policy.effectiveStatus) : 'Belum tersedia'}
             />
             <InfoCard
               icon={<Clock3 className="h-4 w-4" />}

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import { ProductStatus } from '@prisma/client';
+import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 
 // Helper to convert string to URL-friendly slug
 function slugify(text: string): string {
@@ -70,6 +71,14 @@ export async function createProductAction(input: {
     if (!category) {
       return { success: false, error: 'Kategori produk tidak sah, tidak aktif, atau tidak ditemukan.' };
     }
+  }
+
+  const policy = await getTenantSubscriptionPolicy(tenantId);
+  if (!policy.canCreateProduct) {
+    return {
+      success: false,
+      error: 'Tambah produk sementara dibatasi. Silakan perpanjang paket agar toko aktif kembali.',
+    };
   }
 
   const activeSubscription = await prisma.tenantSubscription.findFirst({

@@ -54,18 +54,45 @@ export default async function CheckoutPage() {
             </svg>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko Dinonaktifkan</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko sementara belum aktif</h1>
             <p className="text-slate-400 text-sm">
-              Toko online pada alamat <code className="px-2 py-1 bg-slate-950 border border-slate-800 rounded font-mono text-rose-300 text-xs">{host}</code> saat ini sedang dinonaktifkan atau ditangguhkan oleh platform.
+              Silakan hubungi pemilik toko atau admin Daganta untuk informasi lebih lanjut.
             </p>
           </div>
           <div className="pt-2">
             <a 
               href="mailto:support@daganta.id" 
-              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 font-medium rounded-xl transition-all border border-slate-700 text-sm"
+              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-350 font-medium rounded-xl transition-all border border-slate-700 text-sm"
             >
               Hubungi Dukungan Daganta
             </a>
+          </div>
+        </div>
+      </main>
+    );
+  }
+  if (result.accessMode === 'STOREFRONT_READONLY') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
+          <div className="mx-auto w-16 h-16 bg-amber-950 border border-amber-500/30 rounded-full flex items-center justify-center text-amber-450">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Checkout Dibatasi</h1>
+            <p className="text-slate-400 text-sm">
+              Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link 
+              href="/" 
+              className="inline-block w-full py-3 px-4 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-amber-600/20 text-sm"
+            >
+              Kembali ke Beranda Toko
+            </Link>
           </div>
         </div>
       </main>

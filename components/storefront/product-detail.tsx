@@ -199,7 +199,7 @@ export default function ProductDetail({
       {/* Read-Only Warning Banner */}
       {isReadOnly && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 px-4 py-2 text-center text-xs font-semibold backdrop-blur-sm sticky top-0 z-50">
-          ⚠️ Toko ini sedang dalam Mode Terbatas (Read-Only). Transaksi pembelian saat ini tidak dapat dilakukan.
+          ⚠️ Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { TenantStatus } from '@prisma/client';
 import { prisma } from '../prisma';
 import { TenantResolveResult } from './types';
+import { getTenantSubscriptionPolicy } from '../billing/lifecycle';
 
 export async function resolveTenantFromHost(hostname: string): Promise<TenantResolveResult> {
   try {
@@ -85,27 +86,19 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
       };
     }
 
-    // 5. Map TenantStatus to TenantAccessMode
+    // 5. Map computed Subscription Policy to TenantAccessMode
+    const policy = await getTenantSubscriptionPolicy(tenant.id);
+    
     let accessMode: TenantResolveResult['accessMode'];
     let status: TenantResolveResult['status'] = 'SUCCESS';
 
-    switch (tenant.status) {
-      case TenantStatus.ACTIVE:
-      case TenantStatus.EXPIRING_SOON:
-      case TenantStatus.GRACE_PERIOD:
-        accessMode = 'STOREFRONT_FULL';
-        break;
-      case TenantStatus.LIMITED:
-        accessMode = 'STOREFRONT_READONLY';
-        break;
-      case TenantStatus.SUSPENDED:
-      case TenantStatus.ARCHIVED:
-        accessMode = 'BLOCKED';
-        status = 'BLOCKED';
-        break;
-      default:
-        accessMode = 'NOT_FOUND';
-        status = 'NOT_FOUND';
+    if (!policy.canViewStorefront) {
+      accessMode = 'BLOCKED';
+      status = 'BLOCKED';
+    } else if (!policy.canCheckout) {
+      accessMode = 'STOREFRONT_READONLY';
+    } else {
+      accessMode = 'STOREFRONT_FULL';
     }
 
     return {

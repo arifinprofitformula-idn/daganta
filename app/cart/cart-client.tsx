@@ -14,9 +14,10 @@ interface CartClientProps {
     subdomain: string;
   };
   tenantWhatsapp: string | null;
+  isReadOnly?: boolean;
 }
 
-export default function CartClient({ tenant, tenantWhatsapp }: CartClientProps) {
+export default function CartClient({ tenant, tenantWhatsapp, isReadOnly = false }: CartClientProps) {
   const theme: TenantThemeConfig = getTenantThemeConfig(tenant.slug);
   const router = useRouter();
   const { cartItems, updateQuantity, removeFromCart, subtotal, totalWeight, isHydrated } = useCart();
@@ -92,10 +93,14 @@ export default function CartClient({ tenant, tenantWhatsapp }: CartClientProps) 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Keranjang Belanja</h1>
-            <p className="text-xs text-slate-500 font-medium">Tinjau item belanjaan Anda sebelum melanjutkan checkout</p>
-          </div>
+          {isReadOnly && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 px-4 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.</span>
+            </div>
+          )}
 
           {cartItems.length === 0 ? (
             /* Empty Cart State */
@@ -232,16 +237,26 @@ export default function CartClient({ tenant, tenantWhatsapp }: CartClientProps) 
                     <span className="text-lg font-black text-[var(--primary)]">{formatRupiah(subtotal)}</span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => router.push('/checkout')}
-                    className="w-full py-3.5 px-4 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-black text-xs rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-1.5"
-                  >
-                    <span>Lanjut ke Pembayaran</span>
-                    <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2.3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </button>
+                  {isReadOnly ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full py-3.5 px-4 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed select-none text-center"
+                    >
+                      Checkout Dibatasi
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => router.push('/checkout')}
+                      className="w-full py-3.5 px-4 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-black text-xs rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-1.5"
+                    >
+                      <span>Lanjut ke Pembayaran</span>
+                      <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2.3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -54,15 +54,15 @@ export default async function Page() {
             </svg>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko Dinonaktifkan</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko sementara belum aktif</h1>
             <p className="text-slate-400 text-sm">
-              Toko online pada alamat <code className="px-2 py-1 bg-slate-950 border border-slate-800 rounded font-mono text-rose-300 text-xs">{host}</code> saat ini sedang dinonaktifkan atau ditangguhkan oleh platform.
+              Silakan hubungi pemilik toko atau admin Daganta untuk informasi lebih lanjut.
             </p>
           </div>
           <div className="pt-2">
             <a 
               href="mailto:support@daganta.id" 
-              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-655 text-slate-300 font-medium rounded-xl transition-all border border-slate-700 text-sm"
+              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-350 font-medium rounded-xl transition-all border border-slate-700 text-sm"
             >
               Hubungi Dukungan Daganta
             </a>

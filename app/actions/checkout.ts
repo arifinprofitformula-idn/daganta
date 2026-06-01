@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
 import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
 import { OrderStatus, PaymentMethod, PaymentProvider, NotificationChannel, NotificationEventType } from '@prisma/client';
+import { getTenantSubscriptionPolicy } from '../../lib/billing/lifecycle';
 import { manualPaymentAdapter } from '../../lib/payments';
 import { createNotificationEvent } from '../../lib/notifications/create-event';
 
@@ -61,8 +62,9 @@ export async function processCheckout(payload: CheckoutPayload) {
 
     const tenant = resolution.tenant;
 
-    if (resolution.accessMode === 'STOREFRONT_READONLY') {
-      return { success: false, error: 'Toko ini dalam mode baca saja. Transaksi tidak diizinkan.' };
+    const policy = await getTenantSubscriptionPolicy(tenant.id);
+    if (!policy.canCheckout) {
+      return { success: false, error: 'Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.' };
     }
 
     // 3. Validasi & Hitung Ulang Harga serta Berat berdasarkan Database (mencegah manipulasi client-side)
