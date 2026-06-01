@@ -1,5 +1,6 @@
 import React from 'react';
 import { Prisma } from '@prisma/client';
+import Link from 'next/link';
 
 interface ProductCardProps {
   product: {
@@ -38,7 +39,7 @@ export default function ProductCard({ product, isReadOnly = false }: ProductCard
   return (
     <div className="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl overflow-hidden flex flex-col h-full group hover:shadow-xl hover:shadow-indigo-950/20 transition-all duration-300 transform hover:-translate-y-1">
       {/* Product Image */}
-      <div className="relative aspect-square w-full bg-slate-950 flex items-center justify-center overflow-hidden border-b border-slate-900">
+      <Link href={`/p/${product.slug}`} className="relative aspect-square w-full bg-slate-950 flex items-center justify-center overflow-hidden border-b border-slate-900 block cursor-pointer group-hover:opacity-90 transition-opacity">
         {product.imageUrl ? (
           <img 
             src={product.imageUrl} 
@@ -60,14 +61,16 @@ export default function ProductCard({ product, isReadOnly = false }: ProductCard
             {product.category.name}
           </span>
         )}
-      </div>
+      </Link>
 
       {/* Product Content */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div className="space-y-2">
-          <h3 className="font-bold text-slate-100 group-hover:text-indigo-400 transition-colors text-sm line-clamp-2 leading-snug">
-            {product.name}
-          </h3>
+          <Link href={`/p/${product.slug}`} className="block">
+            <h3 className="font-bold text-slate-100 hover:text-indigo-400 transition-colors text-sm line-clamp-2 leading-snug">
+              {product.name}
+            </h3>
+          </Link>
           <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed">
             {product.description || 'Tidak ada deskripsi produk.'}
           </p>
