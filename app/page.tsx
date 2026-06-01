@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { resolveTenantFromHost } from '../lib/tenant/resolve-tenant';
 import { getProductsByTenantId } from '../lib/data-access/products';
+import { prisma } from '../lib/prisma';
 import MarketingHome from '../components/marketing/marketing-home';
 import StorefrontHome from '../components/storefront/storefront-home';
 
@@ -74,12 +75,49 @@ export default async function Page() {
   const tenant = result.tenant!;
   const products = await getProductsByTenantId(tenant.id);
   const isReadOnly = result.accessMode === 'STOREFRONT_READONLY';
+
+  // Hubungkan nomor WhatsApp dari database alamat default tenant
+  const address = await prisma.address.findFirst({
+    where: {
+      tenantId: tenant.id,
+      isDefault: true,
+    },
+  });
+
+  // Ambil no telp, jika tidak ada cari alamat mana saja milik tenant
+  let tenantPhone = address?.phone || null;
+  if (!tenantPhone) {
+    const anyAddress = await prisma.address.findFirst({
+      where: {
+        tenantId: tenant.id,
+      },
+    });
+    tenantPhone = anyAddress?.phone || null;
+  }
+
+  // Bersihkan data (Decimal -> number) untuk mencegah Next.js Serialization error di Client Component
+  const serializedProducts = products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    basePrice: Number(p.basePrice),
+    imageUrl: p.imageUrl,
+    isFeatured: p.isFeatured,
+    category: p.category ? { name: p.category.name } : null,
+    variants: p.variants.map((v) => ({
+      id: v.id,
+      name: v.name,
+      price: Number(v.price),
+    })),
+  }));
   
   return (
     <StorefrontHome 
       tenant={tenant} 
-      products={products} 
+      products={serializedProducts} 
       isReadOnly={isReadOnly} 
+      tenantWhatsapp={tenantPhone}
     />
   );
 }
