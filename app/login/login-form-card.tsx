@@ -23,6 +23,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
+      suppressHydrationWarning={true}
       className="w-full h-12 bg-brand-navy hover:bg-[#152e4a] active:bg-[#071524] text-white font-semibold rounded-xl transition-all duration-300 shadow-[0_0_12px_rgba(20,184,166,0.12)] hover:shadow-[0_0_20px_rgba(20,184,166,0.25)] flex items-center justify-center gap-2 border border-white/5 disabled:opacity-75 disabled:cursor-not-allowed text-sm tracking-wide"
     >
       {pending ? (
@@ -100,6 +101,7 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
               name="email"
               placeholder="nama@toko.com"
               required
+              suppressHydrationWarning={true}
               className="w-full bg-white border border-brand-border hover:border-slate-300 focus:border-brand-blue rounded-xl pl-11 pr-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/5 transition-all duration-200 font-medium"
             />
           </div>
@@ -119,6 +121,7 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
               name="password"
               placeholder="Masukkan kata sandi"
               required
+              suppressHydrationWarning={true}
               className="w-full bg-white border border-brand-border hover:border-slate-300 focus:border-brand-blue rounded-xl pl-11 pr-11 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/5 transition-all duration-200 font-medium"
             />
             <button
@@ -143,6 +146,7 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
+              suppressHydrationWarning={true}
               className="w-4 h-4 rounded border-brand-border text-brand-blue focus:ring-brand-blue focus:ring-offset-0 cursor-pointer"
             />
             <span className="group-hover:text-brand-navy transition-colors">
@@ -176,6 +180,7 @@ export default function LoginFormCard({ errorMsg }: LoginFormCardProps) {
         <button
           type="button"
           onClick={() => {}}
+          suppressHydrationWarning={true}
           className="w-full h-12 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-705 font-semibold rounded-xl border border-brand-border transition-all duration-200 flex items-center justify-center gap-2.5 text-xs focus:outline-none"
         >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
