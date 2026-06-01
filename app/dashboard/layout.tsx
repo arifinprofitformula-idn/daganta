@@ -1,8 +1,8 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import DashboardShell from '@/components/dashboard/dashboard-shell';
-import { getDashboardSummaryBySubdomain } from '@/lib/data-access/dashboard';
-import { getCurrentUserProfile } from '@/lib/auth/session';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
+import AccountAccessState from '@/components/dashboard/account-access-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,21 +11,32 @@ export default async function Layout({
 }: { 
   children: React.ReactNode 
 }) {
-  // 1. Validasi sesi aktif pengguna. Jika tidak valid, alihkan ke login.
-  const authData = await getCurrentUserProfile();
-  if (!authData || !authData.user) {
+  // 1. Evaluasi keanggotaan dan sesi otorisasi aktif secara terpusat
+  const tenantCtx = await getActiveTenantContext();
+
+  // 2. Jika tidak ada sesi user aktif, langsung alihkan ke login
+  if (!tenantCtx.user) {
     redirect('/login');
   }
 
-  // 2. Dapatkan data agregasi tenant demo dari database
-  const summary = await getDashboardSummaryBySubdomain('toyanusantara');
-  const tenantName = summary?.tenant.name || 'Toya Nusantara';
+  // 3. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
+  if (tenantCtx.status === 'NO_PROFILE' || tenantCtx.status === 'NO_MEMBERSHIP') {
+    return (
+      <AccountAccessState 
+        error={tenantCtx.status} 
+        userEmail={tenantCtx.user.email || ''} 
+      />
+    );
+  }
+
+  // 4. Konteks toko aktif yang sah hasil saringan membership
+  const tenantName = tenantCtx.activeTenant?.name || 'Nama Toko';
 
   return (
     <DashboardShell 
       tenantName={tenantName}
-      userEmail={authData.user.email || ''}
-      hasProfile={authData.hasProfile}
+      userEmail={tenantCtx.user.email || ''}
+      hasProfile={true}
     >
       {children}
     </DashboardShell>

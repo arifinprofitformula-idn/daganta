@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingBag, Eye, Plus, Sparkles } from 'lucide-react';
-import { prisma } from '@/lib/prisma';
 import { getProductsByTenantId } from '@/lib/data-access/products';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +17,16 @@ const formatRupiah = (value: any) => {
 };
 
 export default async function Page() {
-  // 1. Fetch Tenant dynamically based on subdomain
-  const tenant = await prisma.tenant.findUnique({
-    where: { subdomain: 'toyanusantara' }
-  });
+  // 1. Dapatkan konteks toko aktif dari membership pengguna sesi
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null; // Layout induk sudah menangani AccountAccessState
+  }
 
-  // 2. Fetch products for this tenant
-  const products = tenant ? await getProductsByTenantId(tenant.id) : [];
+  const tenant = tenantCtx.activeTenant;
+
+  // 2. Ambil produk dari database ter-filter tenantId secara ketat
+  const products = await getProductsByTenantId(tenant.id);
 
   return (
     <div className="space-y-6 select-none">
@@ -51,7 +54,7 @@ export default async function Page() {
         <div className="space-y-1">
           <h4 className="text-xs font-bold text-slate-200">Mode Demo Internal</h4>
           <p className="text-[10px] text-slate-400 leading-normal">
-            Halaman ini menampilkan produk nyata dari database lokal yang disaring untuk **Toya Nusantara** secara otomatis. Penambahan, pengeditan, atau penghapusan produk dinonaktifkan dalam mode draf visual ini.
+            Halaman ini menampilkan produk nyata dari database lokal yang disaring untuk <span className="text-indigo-350 font-extrabold">{tenant.name}</span> secara otomatis. Penambahan, pengeditan, atau penghapusan produk dinonaktifkan dalam mode draf visual ini.
           </p>
         </div>
       </div>

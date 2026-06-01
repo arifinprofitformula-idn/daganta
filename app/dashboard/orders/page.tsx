@@ -1,7 +1,16 @@
 import React from 'react';
 import { ShoppingCart, RefreshCw } from 'lucide-react';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  // Defensive auth check
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null;
+  }
+
   return (
     <div className="space-y-6 select-none">
       {/* Header Info */}
@@ -24,7 +33,7 @@ export default function Page() {
 
       {/* Empty State */}
       <div className="py-24 flex flex-col items-center justify-center text-center space-y-5 max-w-md mx-auto bg-slate-900 border border-slate-850 rounded-2xl p-8 shadow-xl">
-        <div className="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-500 shadow-inner">
+        <div className="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-500 shadow-inner">
           <ShoppingCart className="w-6 h-6 shrink-0" />
         </div>
         <div className="space-y-2">

@@ -36,10 +36,22 @@ export async function getCurrentUserProfile(): Promise<UserAuthProfile | null> {
     where: { authUserId: user.id }
   });
 
-  // 2. Development Fallback: Jika tidak ketemu, cari berdasarkan email user
+  // 2. Safe Auto-Link Fallback: Jika tidak ketemu, cocokkan email jika authUserId null
   if (!profile && user.email) {
+    // Jalankan updateMany yang aman guna menjamin tidak pernah menimpa authUserId yang sudah terisi
+    await prisma.userProfile.updateMany({
+      where: {
+        email: user.email,
+        authUserId: null
+      },
+      data: {
+        authUserId: user.id
+      }
+    });
+
+    // Ambil ulang UserProfile berdasarkan authUserId hasil update
     profile = await prisma.userProfile.findUnique({
-      where: { email: user.email }
+      where: { authUserId: user.id }
     });
   }
 

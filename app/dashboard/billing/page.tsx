@@ -1,13 +1,30 @@
 import React from 'react';
-import { CreditCard, CheckCircle, ShieldAlert, Sparkles } from 'lucide-react';
+import { CheckCircle, Sparkles } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  // 1. Dapatkan konteks toko aktif dari membership pengguna sesi
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null; // Layout induk sudah menangani AccountAccessState
+  }
+
+  const tenant = tenantCtx.activeTenant;
+
+  // 2. Hitung jumlah produk nyata dari database untuk toko ini
+  const productCount = await prisma.product.count({
+    where: { tenantId: tenant.id }
+  });
+
   return (
     <div className="space-y-6 select-none">
       {/* Header Info */}
       <div className="flex items-center justify-between border-b border-slate-900 pb-5">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Paket Aktif & Biaya</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight">Paket Langganan</h1>
           <p className="text-xs text-slate-500 mt-1">Pantau masa aktif toko, biaya langganan, dan sisa limit kuota katalog Anda</p>
         </div>
       </div>
@@ -28,7 +45,7 @@ export default function Page() {
             
             <div className="text-right">
               <span className="text-xs text-slate-500 block leading-tight">Biaya Langganan</span>
-              <span className="text-base font-extrabold text-indigo-450 select-all">Rp 149.000 <span className="text-[10px] text-slate-500 font-normal">/ bulan</span></span>
+              <span className="text-base font-extrabold text-indigo-455 select-all">Rp 149.000 <span className="text-[10px] text-slate-500 font-normal">/ bulan</span></span>
             </div>
           </div>
 
@@ -38,7 +55,7 @@ export default function Page() {
               { label: 'Status Paket', val: 'Aktif', active: true },
               { label: 'Masa Aktif Hingga', val: '01 Juli 2026', desc: 'Gracely Renewal' },
               { label: 'Sistem Pembayaran', val: 'WhatsApp Billing / Manual Transfer' },
-              { label: 'Batas Produk Maksimal', val: '100 Produk', detail: 'Saat ini terisi 3 produk' }
+              { label: 'Batas Produk Maksimal', val: '100 Produk', detail: `Saat ini terisi ${productCount} produk` }
             ].map((d, idx) => (
               <div key={idx} className="p-3.5 bg-slate-950/50 border border-slate-950 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 font-bold block">{d.label}</span>

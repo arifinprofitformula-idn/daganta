@@ -19,7 +19,6 @@ export async function getDashboardSummaryBySubdomain(subdomain: string): Promise
     throw new Error('Subdomain is required for tenant-scoped dashboard queries');
   }
 
-  // 1. Fetch Tenant Context dynamically from database using the subdomain
   const tenant = await prisma.tenant.findUnique({
     where: { subdomain }
   });
@@ -28,7 +27,52 @@ export async function getDashboardSummaryBySubdomain(subdomain: string): Promise
     return null;
   }
 
-  // 2. Perform Tenant-Scoped queries using the verified tenant.id
+  const [productCount, orderCount, customerCount] = await Promise.all([
+    prisma.product.count({
+      where: {
+        tenantId: tenant.id,
+        status: ProductStatus.ACTIVE
+      }
+    }),
+    prisma.order.count({
+      where: {
+        tenantId: tenant.id
+      }
+    }),
+    prisma.customer.count({
+      where: {
+        tenantId: tenant.id
+      }
+    })
+  ]);
+
+  return {
+    tenant: {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      subdomain: tenant.subdomain,
+      status: tenant.status
+    },
+    productCount,
+    orderCount,
+    customerCount
+  };
+}
+
+export async function getDashboardSummaryByTenantId(tenantId: string): Promise<DashboardSummary | null> {
+  if (!tenantId) {
+    throw new Error('Tenant ID is required for tenant-scoped dashboard queries');
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId }
+  });
+
+  if (!tenant) {
+    return null;
+  }
+
   const [productCount, orderCount, customerCount] = await Promise.all([
     prisma.product.count({
       where: {

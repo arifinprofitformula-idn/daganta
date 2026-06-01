@@ -1,7 +1,37 @@
 import React from 'react';
 import { Settings, Save, AlertCircle } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  // 1. Dapatkan konteks toko aktif dari membership pengguna sesi
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null; // Layout induk sudah menangani AccountAccessState
+  }
+
+  // 2. Ambil informasi detail toko dari database ter-filter tenantId aktif
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantCtx.activeTenant.id },
+    include: {
+      owner: { select: { email: true } },
+      addresses: {
+        where: { isDefault: true },
+        take: 1
+      }
+    }
+  });
+
+  const storeName = tenant?.name || '';
+  const subdomain = tenant?.subdomain || '';
+  const ownerEmail = tenant?.owner?.email || '';
+  const addressDetail = tenant?.addresses?.[0];
+  const addressString = addressDetail 
+    ? `${addressDetail.streetAddress} (Postal: ${addressDetail.postalCode || '-'})`
+    : 'Alamat gudang utama belum dikonfigurasi.';
+
   return (
     <div className="space-y-6 select-none">
       {/* Header Info */}
@@ -27,7 +57,7 @@ export default function Page() {
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Toko</label>
                 <input 
                   type="text" 
-                  value="Toya Nusantara" 
+                  value={storeName} 
                   disabled
                   className="w-full bg-slate-950 border border-slate-850 hover:border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 font-medium cursor-not-allowed select-all focus:outline-none"
                 />
@@ -40,7 +70,7 @@ export default function Page() {
                   <span className="bg-slate-950/70 border-r border-slate-850 px-3 py-2.5 text-slate-550 font-mono select-none">https://</span>
                   <input 
                     type="text" 
-                    value="toyanusantara" 
+                    value={subdomain} 
                     disabled
                     className="flex-1 bg-slate-950 px-4 py-2.5 text-slate-300 font-medium cursor-not-allowed select-all focus:outline-none"
                   />
@@ -55,7 +85,7 @@ export default function Page() {
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nomor WhatsApp Penerima</label>
                 <input 
                   type="text" 
-                  value="081234567890" 
+                  value="0812-XXXX-XXXX" 
                   disabled
                   className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-slate-300 font-medium cursor-not-allowed select-all focus:outline-none"
                 />
@@ -65,7 +95,7 @@ export default function Page() {
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Kontak</label>
                 <input 
                   type="text" 
-                  value="owner.toya@daganta.com" 
+                  value={ownerEmail} 
                   disabled
                   className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-slate-300 font-medium cursor-not-allowed select-all focus:outline-none"
                 />
@@ -76,7 +106,7 @@ export default function Page() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alamat Gudang Utama (Pengiriman)</label>
               <textarea 
-                value="Gudang Utama Toya, Jl. Dago No. 123, Coblong, Kota Bandung, Jawa Barat (Postal: 40135)" 
+                value={addressString} 
                 disabled
                 rows={3}
                 className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-slate-300 font-medium cursor-not-allowed select-all focus:outline-none resize-none"
@@ -107,17 +137,17 @@ export default function Page() {
 
             <div className="space-y-2 text-[10px] text-slate-400 leading-relaxed">
               <p>
-                Konfigurasi di atas diambil secara *read-only* dari database seed toko demo **Toya Nusantara** secara *tenant-scoped*.
+                Konfigurasi di atas diambil secara *read-only* dari database utama secara *tenant-scoped* untuk toko aktif Anda.
               </p>
               <p>
-                Dalam mode draf visual v0.1G, form di atas dikunci demi keamanan integritas database. Penyimpanan data konseptual dan submit form akan diaktifkan setelah integrasi otentikasi serta fungsionalitas admin selesai dipasang.
+                Dalam mode draf visual v0.1I, form di atas dikunci demi keamanan integritas database. Penyimpanan data konseptual dan submit form akan diaktifkan setelah integrasi otentikasi serta fungsionalitas admin selesai dipasang.
               </p>
             </div>
           </div>
 
           <div className="pt-4 border-t border-slate-950">
             <span className="text-[9px] text-slate-500 font-bold block select-none">
-              Daganta Platform Version 0.1G
+              Daganta Platform Version 0.1I
             </span>
           </div>
         </div>

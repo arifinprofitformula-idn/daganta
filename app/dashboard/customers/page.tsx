@@ -1,7 +1,16 @@
 import React from 'react';
 import { Users, UserPlus } from 'lucide-react';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  // Defensive auth check
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null;
+  }
+
   return (
     <div className="space-y-6 select-none">
       {/* Header Info */}

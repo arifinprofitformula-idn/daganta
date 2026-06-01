@@ -6,18 +6,31 @@ import {
   Activity,
   ArrowUpRight
 } from 'lucide-react';
-import { getDashboardSummaryBySubdomain } from '@/lib/data-access/dashboard';
+import { getDashboardSummaryByTenantId } from '@/lib/data-access/dashboard';
+import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import StatCard from '@/components/dashboard/stat-card';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const summary = await getDashboardSummaryBySubdomain('toyanusantara');
+  // 1. Dapatkan konteks toko aktif dari membership pengguna sesi
+  const tenantCtx = await getActiveTenantContext();
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+    return null; // Layout induk sudah menangani AccountAccessState
+  }
+
+  const tenantId = tenantCtx.activeTenant.id;
+
+  // 2. Ambil ringkasan statistik toko dari database
+  const summary = await getDashboardSummaryByTenantId(tenantId);
   
   const productCount = summary?.productCount ?? 0;
   const orderCount = summary?.orderCount ?? 0;
   const customerCount = summary?.customerCount ?? 0;
   const storeStatus = summary?.tenant.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif';
+
+  // 3. Nama pengguna dinamis dari profil atau pecahan email
+  const userName = tenantCtx.userProfile?.name || tenantCtx.user?.email?.split('@')[0] || 'Pengguna';
 
   return (
     <div className="space-y-8 select-none">
@@ -29,7 +42,7 @@ export default async function Page() {
         <div className="space-y-2 relative">
           <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-500/10">Selamat Datang</span>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-snug">
-            Halo Arifin, selamat datang kembali!
+            Halo {userName}, selamat datang kembali!
           </h1>
           <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
             Semua aktivitas toko Anda hari ini berjalan dengan lancar. Kelola produk, lihat pesanan baru dari WhatsApp, dan pantau pelanggan setia Anda dengan mudah dari panel terpusat.
