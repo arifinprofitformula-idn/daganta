@@ -5,6 +5,7 @@ import { getProductBySlug } from '../../../lib/data-access/products';
 import { prisma } from '../../../lib/prisma';
 import MarketingHome from '../../../components/marketing/marketing-home';
 import ProductDetail from '../../../components/storefront/product-detail';
+import { CartProvider } from '../../../lib/cart/use-cart';
 
 interface PageProps {
   params: Promise<{
@@ -212,12 +213,14 @@ export default async function Page({ params }: PageProps) {
   }));
 
   return (
-    <ProductDetail
-      tenant={tenant}
-      product={serializedProduct}
-      relatedProducts={serializedRelated}
-      tenantWhatsapp={tenantPhone}
-      isReadOnly={isReadOnly}
-    />
+    <CartProvider subdomain={tenant.subdomain}>
+      <ProductDetail
+        tenant={tenant}
+        product={serializedProduct}
+        relatedProducts={serializedRelated}
+        tenantWhatsapp={tenantPhone}
+        isReadOnly={isReadOnly}
+      />
+    </CartProvider>
   );
 }

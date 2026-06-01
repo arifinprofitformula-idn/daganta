@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ProductCard from './product-card';
 import { getTenantThemeConfig, TenantThemeConfig } from '../../lib/tenant/theme-config';
+import { useCart } from '../../lib/cart/use-cart';
 
 interface StorefrontHomeProps {
   tenant: {
@@ -25,6 +26,7 @@ export default function StorefrontHome({
 }: StorefrontHomeProps) {
   // 1. Ambil Konfigurasi Tema Dinamis untuk Tenant ini
   const theme: TenantThemeConfig = getTenantThemeConfig(tenant.slug);
+  const { totalItems, isHydrated } = useCart();
 
   // States
   const [activeCategory, setActiveCategory] = useState<string>('Semua');
@@ -161,14 +163,33 @@ export default function StorefrontHome({
             <button onClick={() => scrollToSection(faqRef)} className="hover:text-[var(--primary)] transition-colors">FAQ</button>
           </nav>
 
-          {/* WhatsApp Action Link */}
-          <div>
+          {/* Actions Block */}
+          <div className="flex items-center gap-3">
+            {/* Dynamic Cart Icon Link */}
+            <Link 
+              href="/cart"
+              className="relative p-2.5 text-slate-600 hover:text-[var(--primary)] transition-all flex items-center justify-center shrink-0 bg-slate-50 hover:bg-slate-100/70 border border-slate-200/50 rounded-xl shadow-sm hover:shadow-md"
+              title="Keranjang Belanja"
+            >
+              <svg className="w-4.5 h-4.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2.3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {isHydrated && totalItems > 0 && (
+                <span 
+                  className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full text-[9px] font-black text-white flex items-center justify-center px-1 border border-white"
+                  style={{ backgroundColor: theme.primaryColor }}
+                >
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
             {mainWhatsappUrl && !isReadOnly ? (
               <a 
                 href={mainWhatsappUrl || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-1.5"
+                className="px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center gap-1.5 animate-scaleIn"
               >
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.588 2.025 14.11 1 11.48 1c-5.44 0-9.866 4.372-9.87 9.802 0 1.714.45 3.387 1.302 4.887L1.888 20.3l4.759-1.146z" />

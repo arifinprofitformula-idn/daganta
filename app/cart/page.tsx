@@ -1,21 +1,22 @@
 import { headers } from 'next/headers';
-import { resolveTenantFromHost } from '../lib/tenant/resolve-tenant';
-import { getProductsByTenantId } from '../lib/data-access/products';
-import { prisma } from '../lib/prisma';
-import MarketingHome from '../components/marketing/marketing-home';
-import StorefrontHome from '../components/storefront/storefront-home';
-import { CartProvider } from '../lib/cart/use-cart';
+import Link from 'next/link';
+import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
+import { prisma } from '../../lib/prisma';
+import MarketingHome from '../../components/marketing/marketing-home';
+import { CartProvider } from '../../lib/cart/use-cart';
+import CartClient from './cart-client';
 
-export default async function Page() {
+export default async function CartPage() {
   const headersList = await headers();
   const host = headersList.get('host') ?? '';
-  
+
+  // 1. Resolusi Tenant
   const result = await resolveTenantFromHost(host);
-  
+
   if (result.status === 'MARKETING_SITE') {
     return <MarketingHome />;
   }
-  
+
   if (result.status === 'NOT_FOUND') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
@@ -43,7 +44,7 @@ export default async function Page() {
       </main>
     );
   }
-  
+
   if (result.status === 'BLOCKED') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
@@ -62,7 +63,7 @@ export default async function Page() {
           <div className="pt-2">
             <a 
               href="mailto:support@daganta.id" 
-              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-655 text-slate-300 font-medium rounded-xl transition-all border border-slate-700 text-sm"
+              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-605 text-slate-300 font-medium rounded-xl transition-all border border-slate-700 text-sm"
             >
               Hubungi Dukungan Daganta
             </a>
@@ -71,13 +72,10 @@ export default async function Page() {
       </main>
     );
   }
-  
-  // Successful resolution (SUCCESS)
-  const tenant = result.tenant!;
-  const products = await getProductsByTenantId(tenant.id);
-  const isReadOnly = result.accessMode === 'STOREFRONT_READONLY';
 
-  // Hubungkan nomor WhatsApp dari database alamat default tenant
+  const tenant = result.tenant!;
+
+  // 2. Ambil kontak WhatsApp tenant dari database address
   const address = await prisma.address.findFirst({
     where: {
       tenantId: tenant.id,
@@ -85,7 +83,6 @@ export default async function Page() {
     },
   });
 
-  // Ambil no telp, jika tidak ada cari alamat mana saja milik tenant
   let tenantPhone = address?.phone || null;
   if (!tenantPhone) {
     const anyAddress = await prisma.address.findFirst({
@@ -96,31 +93,9 @@ export default async function Page() {
     tenantPhone = anyAddress?.phone || null;
   }
 
-  // Bersihkan data (Decimal -> number) untuk mencegah Next.js Serialization error di Client Component
-  const serializedProducts = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    description: p.description,
-    basePrice: Number(p.basePrice),
-    imageUrl: p.imageUrl,
-    isFeatured: p.isFeatured,
-    category: p.category ? { name: p.category.name } : null,
-    variants: p.variants.map((v) => ({
-      id: v.id,
-      name: v.name,
-      price: Number(v.price),
-    })),
-  }));
-  
   return (
     <CartProvider subdomain={tenant.subdomain}>
-      <StorefrontHome 
-        tenant={tenant} 
-        products={serializedProducts} 
-        isReadOnly={isReadOnly} 
-        tenantWhatsapp={tenantPhone}
-      />
+      <CartClient tenant={tenant} tenantWhatsapp={tenantPhone} />
     </CartProvider>
   );
 }
