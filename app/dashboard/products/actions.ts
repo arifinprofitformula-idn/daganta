@@ -36,6 +36,14 @@ export async function createProductAction(input: {
   sku?: string;
   description: string;
   status: ProductStatus;
+  imageUrl?: string | null;
+  variants?: Array<{
+    name: string;
+    sku?: string;
+    price: number;
+    stock: number;
+    weightGram: number;
+  }>;
 }): Promise<MutationResult> {
   // 1. Dapatkan konteks toko aktif dari server
   const tenantCtx = await getActiveTenantContext();
@@ -138,22 +146,42 @@ export async function createProductAction(input: {
           description: input.description.trim(),
           status: input.status,
           basePrice: input.basePrice,
+          // TODO: In the next phase, migrate file storage to Supabase Storage and save the public URL here.
+          imageUrl: input.imageUrl || null,
         },
       });
 
-      // b. Buat entitas ProductVariant default ("Standar")
-      await tx.productVariant.create({
-        data: {
-          tenantId,
-          productId: newProduct.id,
-          name: 'Standar',
-          sku: input.sku?.trim() || null,
-          price: input.basePrice,
-          stock: input.stock,
-          weightGram: input.weightGram,
-          isActive: true,
-        },
-      });
+      // b. Buat entitas ProductVariant
+      if (input.variants && input.variants.length > 0) {
+        for (const variant of input.variants) {
+          await tx.productVariant.create({
+            data: {
+              tenantId,
+              productId: newProduct.id,
+              name: variant.name,
+              sku: variant.sku?.trim() || null,
+              price: variant.price,
+              stock: variant.stock,
+              weightGram: variant.weightGram,
+              isActive: true,
+            },
+          });
+        }
+      } else {
+        // Fallback default variant
+        await tx.productVariant.create({
+          data: {
+            tenantId,
+            productId: newProduct.id,
+            name: 'Standar',
+            sku: input.sku?.trim() || null,
+            price: input.basePrice,
+            stock: input.stock,
+            weightGram: input.weightGram,
+            isActive: true,
+          },
+        });
+      }
 
       // c. Tulis AuditLog aktivitas
       try {
@@ -198,6 +226,15 @@ export async function editProductAction(
     sku?: string;
     description: string;
     status: ProductStatus;
+    imageUrl?: string | null;
+    variants?: Array<{
+      id?: string;
+      name: string;
+      sku?: string;
+      price: number;
+      stock: number;
+      weightGram: number;
+    }>;
   }
 ): Promise<MutationResult> {
   // 1. Dapatkan konteks toko aktif dari server
@@ -279,46 +316,69 @@ export async function editProductAction(
           description: input.description.trim(),
           status: input.status,
           basePrice: input.basePrice,
+          // TODO: In the next phase, migrate file storage to Supabase Storage and save the public URL here.
+          imageUrl: input.imageUrl || null,
         },
       });
 
-      // b. Update Variant default ("Standar") atau variant pertama
-      const variantDefault = await tx.productVariant.findFirst({
-        where: { productId, tenantId, name: 'Standar' }
-      });
+      // b. Sync Variants
+      if (input.variants && input.variants.length > 0) {
+        // Collect IDs of variants we want to keep active
+        const keepIds = input.variants.map(v => v.id).filter(Boolean) as string[];
 
-      if (variantDefault) {
-        await tx.productVariant.update({
-          where: { id: variantDefault.id },
+        // Soft-delete (deactivate) other variants of this product of this tenant to preserve order relationships safely
+        await tx.productVariant.updateMany({
+          where: {
+            productId,
+            tenantId,
+            id: { notIn: keepIds }
+          },
           data: {
-            sku: input.sku?.trim() || null,
-            price: input.basePrice,
-            stock: input.stock,
-            weightGram: input.weightGram,
+            isActive: false
           }
         });
+
+        // Upsert sent variants
+        for (const variant of input.variants) {
+          if (variant.id) {
+            // Update existing variant
+            await tx.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                name: variant.name,
+                sku: variant.sku?.trim() || null,
+                price: variant.price,
+                stock: variant.stock,
+                weightGram: variant.weightGram,
+                isActive: true, // Make sure it is active
+              }
+            });
+          } else {
+            // Create new variant
+            await tx.productVariant.create({
+              data: {
+                tenantId,
+                productId,
+                name: variant.name,
+                sku: variant.sku?.trim() || null,
+                price: variant.price,
+                stock: variant.stock,
+                weightGram: variant.weightGram,
+                isActive: true,
+              }
+            });
+          }
+        }
       } else {
-        const firstVariant = await tx.productVariant.findFirst({
-          where: { productId, tenantId }
+        // Fallback default variant
+        const variantDefault = await tx.productVariant.findFirst({
+          where: { productId, tenantId, name: 'Standar' }
         });
 
-        if (firstVariant) {
+        if (variantDefault) {
           await tx.productVariant.update({
-            where: { id: firstVariant.id },
+            where: { id: variantDefault.id },
             data: {
-              sku: input.sku?.trim() || null,
-              price: input.basePrice,
-              stock: input.stock,
-              weightGram: input.weightGram,
-            }
-          });
-        } else {
-          // Jika belum ada variant, buat variant baru
-          await tx.productVariant.create({
-            data: {
-              tenantId,
-              productId,
-              name: 'Standar',
               sku: input.sku?.trim() || null,
               price: input.basePrice,
               stock: input.stock,
@@ -326,6 +386,61 @@ export async function editProductAction(
               isActive: true,
             }
           });
+
+          // Soft-delete any other variants
+          await tx.productVariant.updateMany({
+            where: {
+              productId,
+              tenantId,
+              id: { not: variantDefault.id }
+            },
+            data: {
+              isActive: false
+            }
+          });
+        } else {
+          const firstVariant = await tx.productVariant.findFirst({
+            where: { productId, tenantId }
+          });
+
+          if (firstVariant) {
+            await tx.productVariant.update({
+              where: { id: firstVariant.id },
+              data: {
+                sku: input.sku?.trim() || null,
+                price: input.basePrice,
+                stock: input.stock,
+                weightGram: input.weightGram,
+                isActive: true,
+              }
+            });
+
+            // Soft-delete other variants
+            await tx.productVariant.updateMany({
+              where: {
+                productId,
+                tenantId,
+                id: { not: firstVariant.id }
+              },
+              data: {
+                isActive: false
+              }
+            });
+          } else {
+            // Jika belum ada variant sama sekali, buat baru
+            await tx.productVariant.create({
+              data: {
+                tenantId,
+                productId,
+                name: 'Standar',
+                sku: input.sku?.trim() || null,
+                price: input.basePrice,
+                stock: input.stock,
+                weightGram: input.weightGram,
+                isActive: true,
+              }
+            });
+          }
         }
       }
 
