@@ -133,9 +133,12 @@ model UserProfile {
   updatedAt  DateTime @updatedAt
 
   // Relations
-  tenantMembers TenantMember[]
-  ownedTenants  Tenant[]       @relation("TenantOwner")
-  auditLogs     AuditLog[]     @relation("UserActor")
+  tenantMembers        TenantMember[]
+  ownedTenants         Tenant[]            @relation("TenantOwner")
+  auditLogs            AuditLog[]          @relation("UserActor")
+  agentProfile         AgentProfile?       @relation("UserAgentProfile")
+  transferredClients   AgentClient[]       @relation("TransferredClients")
+  createdLedgerEntries AgentCreditLedger[] @relation("CreatedLedgerEntries")
 }
 
 model Tenant {
@@ -166,9 +169,11 @@ model Tenant {
   orderPayments     OrderPayment[]
   auditLogs         AuditLog[]
   addresses         Address[]
-  subscriptions     TenantSubscription[]
-  invoices          Invoice[]
-  notificationEvents NotificationEvent[]
+  subscriptions       TenantSubscription[]
+  invoices            Invoice[]
+  notificationEvents  NotificationEvent[]
+  agentClient         AgentClient?        @relation("TenantAgentClient")
+  creditLedgerEntries AgentCreditLedger[] @relation("TenantCreditLedgerEntries")
 }
 
 model TenantMember {
@@ -537,6 +542,7 @@ model Invoice {
   @@index([tenantId, status])
   @@index([subscriptionId])
   @@index([planId])
+  creditLedgerEntries  AgentCreditLedger[] @relation("InvoiceCreditLedgerEntries")
 }
 
 // ==========================================
@@ -593,3 +599,108 @@ model NotificationEvent {
   @@index([type])
   @@index([orderId])
 }
+
+enum AgentStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum AgentClientStatus {
+  DRAFT
+  ACTIVE
+  LIMITED
+  SUSPENDED
+  TRANSFERRED
+  ARCHIVED
+}
+
+enum AgentClientOwnershipStatus {
+  AGENT_MANAGED
+  DIRECT_DAGANTA
+  TRANSFERRED_TO_CLIENT
+  TRANSFERRED_TO_DAGANTA
+}
+
+enum AgentCreditLedgerType {
+  TOP_UP
+  STORE_ACTIVATION
+  STORE_RENEWAL
+  REFUND
+  ADMIN_ADJUSTMENT
+  TRANSFER_OUT
+  TRANSFER_IN
+}
+
+enum AgentCreditDirection {
+  CREDIT
+  DEBIT
+}
+
+model AgentProfile {
+  id                String              @id @default(uuid())
+  userProfileId     String              @unique
+  agentCode         String              @unique
+  referralCode      String?             @unique
+  displayName       String
+  status            AgentStatus         @default(PENDING)
+  maxActiveClients  Int                 @default(3)
+  maxDraftClients   Int                 @default(5)
+  creditBalance     Decimal             @default(0.00) @db.Decimal(12, 2)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  userProfile       UserProfile         @relation("UserAgentProfile", fields: [userProfileId], references: [id], onDelete: Cascade)
+  clients           AgentClient[]       @relation("AgentClients")
+  creditLedger      AgentCreditLedger[] @relation("AgentCreditLedgers")
+}
+
+model AgentClient {
+  id                  String                     @id @default(uuid())
+  agentId             String
+  tenantId            String                     @unique
+  status              AgentClientStatus          @default(DRAFT)
+  ownershipStatus     AgentClientOwnershipStatus @default(AGENT_MANAGED)
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  transferredAt       DateTime?
+  transferredByUserId String?
+  notes               String?                    @db.Text
+
+  // Relations
+  agent               AgentProfile               @relation("AgentClients", fields: [agentId], references: [id], onDelete: Cascade)
+  tenant              Tenant                     @relation("TenantAgentClient", fields: [tenantId], references: [id], onDelete: Cascade)
+  transferredByUser   UserProfile?               @relation("TransferredClients", fields: [transferredByUserId], references: [id], onDelete: SetNull)
+  creditLedgerEntries AgentCreditLedger[]        @relation("ClientCreditLedgerEntries")
+
+  @@index([agentId, status])
+}
+
+model AgentCreditLedger {
+  id                 String                @id @default(uuid())
+  agentId            String
+  type               AgentCreditLedgerType
+  direction          AgentCreditDirection
+  amount             Decimal               @db.Decimal(12, 2)
+  balanceBefore      Decimal               @db.Decimal(12, 2)
+  balanceAfter       Decimal               @db.Decimal(12, 2)
+  referenceTenantId  String?
+  referenceInvoiceId String?
+  referenceClientId  String?
+  description        String?               @db.Text
+  createdByUserId    String?
+  createdAt          DateTime              @default(now())
+
+  // Relations
+  agent              AgentProfile          @relation("AgentCreditLedgers", fields: [agentId], references: [id], onDelete: Cascade)
+  referenceTenant    Tenant?               @relation("TenantCreditLedgerEntries", fields: [referenceTenantId], references: [id], onDelete: SetNull)
+  referenceInvoice   Invoice?              @relation("InvoiceCreditLedgerEntries", fields: [referenceInvoiceId], references: [id], onDelete: SetNull)
+  referenceClient    AgentClient?          @relation("ClientCreditLedgerEntries", fields: [referenceClientId], references: [id], onDelete: SetNull)
+  createdByUser      UserProfile?          @relation("CreatedLedgerEntries", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([agentId])
+  @@index([createdAt])
+}
+

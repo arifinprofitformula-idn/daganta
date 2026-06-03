@@ -257,6 +257,63 @@ async function main() {
     },
   });
   console.log('Demo Owner UserProfile seeded:', demoOwner.email);
+  
+  // ==========================================
+  // 1b. AGENT PROFILE
+  // ==========================================
+  const agentUserId = '00000000-0000-0000-0000-000000000004';
+  const agentProfileId = '50000000-0000-0000-0000-000000000100';
+
+  const agentUser = await prisma.userProfile.upsert({
+    where: { email: 'agent@daganta.com' },
+    update: {
+      name: 'Demo Agent Daganta',
+      authUserId: null,
+    },
+    create: {
+      id: agentUserId,
+      email: 'agent@daganta.com',
+      name: 'Demo Agent Daganta',
+      authUserId: null,
+    },
+  });
+  console.log('Agent UserProfile seeded:', agentUser.email);
+
+  const existingAgentProfile = await prisma.agentProfile.findUnique({
+    where: { userProfileId: agentUserId }
+  });
+
+  if (!existingAgentProfile) {
+    const agentProfile = await prisma.agentProfile.create({
+      data: {
+        id: agentProfileId,
+        userProfileId: agentUserId,
+        agentCode: 'AGT-DEMO-100',
+        referralCode: 'REF-DEMO-100',
+        displayName: 'Demo Agent Daganta',
+        status: 'ACTIVE',
+        creditBalance: 100000.00,
+        maxActiveClients: 5,
+        maxDraftClients: 10,
+      }
+    });
+    console.log('AgentProfile seeded:', agentProfile.agentCode);
+
+    const ledgerEntry = await prisma.agentCreditLedger.create({
+      data: {
+        agentId: agentProfileId,
+        type: 'TOP_UP',
+        direction: 'CREDIT',
+        amount: 100000.00,
+        balanceBefore: 0.00,
+        balanceAfter: 100000.00,
+        description: 'Initial seed credit top up',
+      }
+    });
+    console.log('AgentCreditLedger initial entry seeded:', ledgerEntry.id);
+  } else {
+    console.log('AgentProfile already exists, skipping.');
+  }
 
   // ==========================================
   // 2. TENANTS
