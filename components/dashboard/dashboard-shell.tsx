@@ -11,6 +11,8 @@ interface DashboardShellProps {
   activeTenant: { id: string; name: string; slug: string; subdomain: string } | null;
   availableTenants: Array<{ id: string; name: string; slug: string; subdomain: string }>;
   children: React.ReactNode;
+  isAgent?: boolean;
+  hasTenant?: boolean;
 }
 
 export default function DashboardShell({ 
@@ -19,12 +21,14 @@ export default function DashboardShell({
   hasProfile, 
   activeTenant,
   availableTenants,
-  children 
+  children,
+  isAgent = false,
+  hasTenant = false
 }: DashboardShellProps) {
   return (
     <div className="min-h-screen bg-brand-slate-bg text-brand-navy flex font-sans antialiased overflow-hidden">
       {/* Dynamic Sidebar */}
-      <Sidebar tenantName={tenantName} />
+      <Sidebar tenantName={tenantName} isAgent={isAgent} hasTenant={hasTenant} />
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">

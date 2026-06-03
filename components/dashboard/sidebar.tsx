@@ -13,26 +13,37 @@ import {
   CreditCard,
   Settings,
   Store,
-  ExternalLink
+  ExternalLink,
+  Briefcase
 } from 'lucide-react';
 
 interface SidebarProps {
   tenantName: string;
+  isAgent?: boolean;
+  hasTenant?: boolean;
 }
 
-export default function Sidebar({ tenantName }: SidebarProps) {
+export default function Sidebar({ tenantName, isAgent = false, hasTenant = false }: SidebarProps) {
   const pathname = usePathname();
 
-  const menuItems = [
-    { name: 'Ringkasan', href: '/dashboard', icon: Home },
-    { name: 'Produk', href: '/dashboard/products', icon: ShoppingBag },
-    { name: 'Pesanan', href: '/dashboard/orders', icon: Inbox },
-    { name: 'Pelanggan', href: '/dashboard/customers', icon: Users },
-    { name: 'Analitik', href: '#analytics', icon: BarChart3, isComingSoon: true },
-    { name: 'Tampilan Toko', href: '#storefront', icon: Palette, isComingSoon: true },
-    { name: 'Paket & Tagihan', href: '/dashboard/billing', icon: CreditCard },
-    { name: 'Pengaturan', href: '/dashboard/settings', icon: Settings },
-  ];
+  const menuItems = [];
+
+  if (isAgent) {
+    menuItems.push({ name: 'Dashboard Agen', href: '/dashboard/agent', icon: Briefcase });
+  }
+
+  if (hasTenant) {
+    menuItems.push(
+      { name: 'Ringkasan', href: '/dashboard', icon: Home },
+      { name: 'Produk', href: '/dashboard/products', icon: ShoppingBag },
+      { name: 'Pesanan', href: '/dashboard/orders', icon: Inbox },
+      { name: 'Pelanggan', href: '/dashboard/customers', icon: Users },
+      { name: 'Analitik', href: '#analytics', icon: BarChart3, isComingSoon: true },
+      { name: 'Tampilan Toko', href: '#storefront', icon: Palette, isComingSoon: true },
+      { name: 'Paket & Tagihan', href: '/dashboard/billing', icon: CreditCard },
+      { name: 'Pengaturan', href: '/dashboard/settings', icon: Settings },
+    );
+  }
 
   return (
     <aside className="w-64 bg-white border-r border-brand-border flex flex-col justify-between shrink-0 h-screen sticky top-0 z-20 select-none">
@@ -51,7 +62,7 @@ export default function Sidebar({ tenantName }: SidebarProps) {
               {tenantName}
             </span>
             <span className="text-[10px] text-slate-400 font-semibold mt-0.5 tracking-wide uppercase">
-              Pemilik Toko
+              {hasTenant ? 'Pemilik Toko' : 'Akun Agen'}
             </span>
           </div>
         </div>
@@ -99,18 +110,20 @@ export default function Sidebar({ tenantName }: SidebarProps) {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-brand-border bg-slate-50/50">
-        <a
-          href="https://daganta.store"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-xl transition-all border border-brand-border shadow-sm group"
-        >
-          <Store className="w-3.5 h-3.5 text-brand-blue transition-transform group-hover:scale-105" />
-          <span>Lihat Webstore</span>
-          <ExternalLink className="w-3 h-3 text-slate-400 ml-0.5" />
-        </a>
-      </div>
+      {hasTenant && (
+        <div className="p-4 border-t border-brand-border bg-slate-50/50">
+          <a
+            href="https://daganta.store"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-xl transition-all border border-brand-border shadow-sm group"
+          >
+            <Store className="w-3.5 h-3.5 text-brand-blue transition-transform group-hover:scale-105" />
+            <span>Lihat Webstore</span>
+            <ExternalLink className="w-3 h-3 text-slate-400 ml-0.5" />
+          </a>
+        </div>
+      )}
 
     </aside>
   );

@@ -4,6 +4,7 @@ import DashboardShell from '@/components/dashboard/dashboard-shell';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import AccountAccessState from '@/components/dashboard/account-access-state';
 import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +21,26 @@ export default async function Layout({
     redirect('/login');
   }
 
+  // Check if the user has an AgentProfile
+  const agentProfile = tenantCtx.userProfile
+    ? await prisma.agentProfile.findUnique({
+        where: { userProfileId: tenantCtx.userProfile.id }
+      })
+    : null;
+  const isAgent = !!agentProfile;
+
   // 3. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
-  if (tenantCtx.status === 'NO_PROFILE' || tenantCtx.status === 'NO_MEMBERSHIP') {
+  // Namun bypass NO_MEMBERSHIP jika user adalah agent
+  if (tenantCtx.status === 'NO_PROFILE') {
+    return (
+      <AccountAccessState 
+        error={tenantCtx.status} 
+        userEmail={tenantCtx.user.email || ''} 
+      />
+    );
+  }
+
+  if (tenantCtx.status === 'NO_MEMBERSHIP' && !isAgent) {
     return (
       <AccountAccessState 
         error={tenantCtx.status} 
@@ -31,7 +50,7 @@ export default async function Layout({
   }
 
   // 4. Konteks toko aktif yang sah hasil saringan membership
-  const tenantName = tenantCtx.activeTenant?.name || 'Nama Toko';
+  const tenantName = tenantCtx.activeTenant?.name || agentProfile?.displayName || 'Nama Toko';
 
   // 5. Query dynamic subscription policy and build warning banner
   let warningBanner = null;
@@ -67,6 +86,8 @@ export default async function Layout({
       hasProfile={true}
       activeTenant={tenantCtx.activeTenant}
       availableTenants={tenantCtx.availableTenants || []}
+      isAgent={isAgent}
+      hasTenant={!!tenantCtx.activeTenant}
     >
       {warningBanner}
       {children}
