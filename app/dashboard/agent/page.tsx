@@ -13,6 +13,7 @@ import {
   ArrowDownLeft,
   Percent,
   AlertCircle,
+  CheckCircle,
   Copy,
   ExternalLink,
   Store
@@ -21,6 +22,12 @@ import { getCurrentUserProfile } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+
+interface AgentDashboardPageProps {
+  searchParams?: Promise<{
+    created?: string;
+  }>;
+}
 
 // Helper to format currency in IDR
 const formatCurrency = (amount: number) => {
@@ -44,7 +51,9 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
-export default async function AgentDashboardPage() {
+export default async function AgentDashboardPage({ searchParams }: AgentDashboardPageProps) {
+  const params = searchParams ? await searchParams : {};
+
   // 1. Authenticate user
   const authData = await getCurrentUserProfile();
   if (!authData || !authData.user) {
@@ -169,9 +178,24 @@ export default async function AgentDashboardPage() {
   const totalClientsCount = clients.length;
 
   const isPending = agentProfile.status === 'PENDING';
+  const isActiveAgent = agentProfile.status === 'ACTIVE';
+  const showClientDraftCreatedBanner = params.created === 'client-draft';
 
   return (
     <div className="space-y-8 select-none font-sans pb-10">
+      {showClientDraftCreatedBanner && (
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between transition-all duration-300 shadow-sm">
+          <div className="space-y-1">
+            <h4 className="text-sm text-emerald-900 font-extrabold flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+              Draft Toko Klien Dibuat
+            </h4>
+            <p className="text-xs leading-relaxed text-emerald-800 opacity-90 font-medium">
+              Toko klien berhasil dibuat sebagai draft. Aktivasi kredit akan tersedia pada tahap berikutnya.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* PENDING NOTIFICATION BANNER */}
       {isPending && (
@@ -237,19 +261,29 @@ export default async function AgentDashboardPage() {
           </div>
         </div>
 
-        {/* Right CTA Area: Create Store Placeholder */}
+        {/* Right CTA Area: Create Store */}
         <div className="w-full md:w-auto shrink-0 relative z-10 flex flex-col items-stretch gap-2.5">
-          <button
-            type="button"
-            disabled
-            title="Fitur ini akan tersedia di v0.4C"
-            className="flex items-center justify-center gap-2 py-3.5 px-6 bg-slate-100 text-slate-400 border border-slate-200 text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-not-allowed uppercase tracking-wider"
-          >
-            <Plus className="w-4 h-4 shrink-0" />
-            Buat Toko Klien — Segera Hadir
-          </button>
+          {isActiveAgent ? (
+            <Link
+              href="/dashboard/agent/clients/new"
+              className="flex items-center justify-center gap-2 py-3.5 px-6 bg-brand-blue hover:bg-blue-700 active:bg-blue-800 text-white border border-brand-blue text-xs font-extrabold rounded-xl transition-all shadow-sm shadow-blue-600/20 uppercase tracking-wider"
+            >
+              <Plus className="w-4 h-4 shrink-0" />
+              Buat Toko Klien
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="Akun agen harus aktif untuk membuat toko klien"
+              className="flex items-center justify-center gap-2 py-3.5 px-6 bg-slate-100 text-slate-400 border border-slate-200 text-xs font-extrabold rounded-xl transition-all shadow-sm cursor-not-allowed uppercase tracking-wider"
+            >
+              <Plus className="w-4 h-4 shrink-0" />
+              Buat Toko Klien
+            </button>
+          )}
           <span className="text-[10px] text-slate-400 font-semibold text-center leading-normal">
-            Pembuatan Toko & Pemotongan Kredit dinonaktifkan di v0.4B.
+            Draft toko tidak memotong saldo kredit pada v0.4C.
           </span>
         </div>
       </div>
