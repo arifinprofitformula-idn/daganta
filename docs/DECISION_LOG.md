@@ -66,3 +66,20 @@
 50. Domain `daganta.store` dan `www.daganta.store` resmi disahkan dan diintegrasikan sebagai domain staging / live validation untuk proyek `daganta-staging` di Vercel.
 51. Pola wildcard `*.daganta.store` resmi ditambahkan dan dihubungkan ke proyek `daganta-staging` di Vercel untuk mendukung rilis storefront tenant yang dinamis dan terisolasi.
 52. Domain utama bisnis `daganta.id` dideklarasikan locked dan sama sekali belum disentuh/dimodifikasi pada fase ini karena merupakan domain produksi riil jangka panjang.
+53. Daganta adalah SaaS multi-tenant untuk UMKM dan agen digital.
+54. Toya Nusantara adalah tenant demo/pilot, bukan produk utama.
+55. MVP Daganta tidak menjadi escrow.
+56. Payment buyer tetap direct-to-tenant.
+57. Payment gateway belum aktif pada fase berjalan.
+58. Webhook masih berupa skeleton.
+59. Notification masih berupa outbox skeleton.
+60. WhatsApp/email belum dikirim sungguhan.
+61. Agent Dashboard v0.4B bersifat read-only.
+62. Agent credit ledger harus immutable.
+63. AgentClient `tenantId` unique untuk MVP.
+64. Agent tidak boleh menyandera UMKM; ownership transfer harus disiapkan.
+65. Public signup membuka trial 14 hari.
+66. Paket resmi MVP: Starter Rp39.000, Growth Rp89.000, Pro Rp179.000.
+67. Annual pricing: bayar 10 bulan, aktif 12 bulan.
+68. Grace period ditetapkan 7 hari.
+69. Transaction commission MVP ditetapkan Rp0.
