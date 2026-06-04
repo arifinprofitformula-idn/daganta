@@ -20,6 +20,11 @@ enum UserRole {
   CUSTOMER
 }
 
+enum PlatformRole {
+  USER
+  SUPER_ADMIN
+}
+
 enum TenantStatus {
   ACTIVE
   EXPIRING_SOON
@@ -125,12 +130,13 @@ enum NotificationEventType {
 // ==========================================
 
 model UserProfile {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  name       String?
-  authUserId String?  @unique // Jembatan ke Supabase Auth
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String       @id @default(uuid())
+  email        String       @unique
+  name         String?
+  authUserId   String?      @unique // Jembatan ke Supabase Auth
+  platformRole PlatformRole @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   // Relations
   tenantMembers        TenantMember[]
@@ -703,4 +709,3 @@ model AgentCreditLedger {
   @@index([agentId])
   @@index([createdAt])
 }
-

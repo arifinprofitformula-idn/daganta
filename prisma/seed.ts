@@ -1,6 +1,7 @@
 import {
   BillingCycle,
   InvoiceStatus,
+  PlatformRole,
   PrismaClient,
   ProductStatus,
   SubscriptionStatus,
@@ -216,12 +217,14 @@ async function main() {
     update: {
       name: 'Super Admin Daganta',
       authUserId: null,
+      platformRole: PlatformRole.SUPER_ADMIN,
     },
     create: {
       id: superAdminId,
       email: 'admin@daganta.com',
       name: 'Super Admin Daganta',
       authUserId: null,
+      platformRole: PlatformRole.SUPER_ADMIN,
     },
   });
   console.log('Super Admin UserProfile seeded:', superAdmin.email);

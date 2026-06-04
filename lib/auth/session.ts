@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { PlatformRole } from '@prisma/client';
 import { createClient } from '@/lib/supabase/server';
 
 export async function getCurrentUser() {
@@ -21,6 +22,7 @@ export interface UserAuthProfile {
     email: string;
     name: string | null;
     authUserId: string | null;
+    platformRole: PlatformRole;
   } | null;
   hasProfile: boolean;
 }
