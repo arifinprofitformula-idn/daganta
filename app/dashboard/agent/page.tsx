@@ -20,12 +20,15 @@ import {
 } from 'lucide-react';
 import { getCurrentUserProfile } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
+import { activateAgentClientStoreAction } from './clients/actions';
 
 export const dynamic = 'force-dynamic';
 
 interface AgentDashboardPageProps {
   searchParams?: Promise<{
     created?: string;
+    activated?: string;
+    error?: string;
   }>;
 }
 
@@ -93,6 +96,16 @@ export default async function AgentDashboardPage({ searchParams }: AgentDashboar
         take: 10
       }
     }
+  });
+
+  const starterPlan = await prisma.subscriptionPlan.findFirst({
+    where: {
+      code: 'STARTER_MONTHLY',
+      isActive: true,
+    },
+    select: {
+      price: true,
+    },
   });
 
   // Check user role from metadata to handle missing profile cases
@@ -176,13 +189,31 @@ export default async function AgentDashboardPage({ searchParams }: AgentDashboar
   const activeClientsCount = clients.filter(c => c.status === 'ACTIVE').length;
   const draftClientsCount = clients.filter(c => c.status === 'DRAFT').length;
   const totalClientsCount = clients.length;
+  const activationCost = starterPlan ? Number(starterPlan.price) : null;
+  const isActiveQuotaFull = activeClientsCount >= maxActiveClients;
+  const hasInsufficientActivationBalance = activationCost !== null && creditBalance < activationCost;
 
   const isPending = agentProfile.status === 'PENDING';
   const isActiveAgent = agentProfile.status === 'ACTIVE';
   const showClientDraftCreatedBanner = params.created === 'client-draft';
+  const showClientStoreActivatedBanner = params.activated === 'client-store';
 
   return (
     <div className="space-y-8 select-none font-sans pb-10">
+      {params.error && (
+        <div className="flex flex-col gap-4 rounded-3xl border border-rose-200 bg-rose-50 p-5 sm:flex-row sm:items-center sm:justify-between transition-all duration-300 shadow-sm">
+          <div className="space-y-1">
+            <h4 className="text-sm text-rose-900 font-extrabold flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              Aktivasi Toko Belum Berhasil
+            </h4>
+            <p className="text-xs leading-relaxed text-rose-800 opacity-90 font-medium">
+              {params.error}
+            </p>
+          </div>
+        </div>
+      )}
+
       {showClientDraftCreatedBanner && (
         <div className="flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between transition-all duration-300 shadow-sm">
           <div className="space-y-1">
@@ -192,6 +223,20 @@ export default async function AgentDashboardPage({ searchParams }: AgentDashboar
             </h4>
             <p className="text-xs leading-relaxed text-emerald-800 opacity-90 font-medium">
               Toko klien berhasil dibuat sebagai draft. Aktivasi kredit akan tersedia pada tahap berikutnya.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {showClientStoreActivatedBanner && (
+        <div className="flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between transition-all duration-300 shadow-sm">
+          <div className="space-y-1">
+            <h4 className="text-sm text-emerald-900 font-extrabold flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+              Toko Klien Aktif
+            </h4>
+            <p className="text-xs leading-relaxed text-emerald-800 opacity-90 font-medium">
+              Toko klien berhasil diaktifkan. Saldo kredit telah diperbarui.
             </p>
           </div>
         </div>
@@ -437,14 +482,51 @@ export default async function AgentDashboardPage({ searchParams }: AgentDashboar
                         {formatDate(client.createdAt)}
                       </td>
                       <td className="py-4 text-right">
-                        <button
-                          disabled
-                          type="button"
-                          title="Pengelolaan toko ditutup pada v0.4B"
-                          className="py-1 px-3 bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 active:bg-slate-200 text-[10px] font-bold rounded-lg transition-all cursor-not-allowed"
-                        >
-                          Kelola Toko
-                        </button>
+                        <div className="flex flex-col items-end gap-2">
+                          {isDraft && (
+                            <div className="space-y-2 text-right">
+                              <div className="space-y-0.5">
+                                <p className="text-[10px] font-extrabold text-brand-navy">
+                                  Biaya aktivasi: {activationCost === null ? '-' : formatCurrency(activationCost)} kredit
+                                </p>
+                                <p className="text-[10px] font-semibold text-slate-400">
+                                  Saldo akan dipotong saat toko diaktifkan.
+                                </p>
+                              </div>
+                              <form action={activateAgentClientStoreAction.bind(null, client.id)}>
+                                <button
+                                  disabled={!isActiveAgent || activationCost === null || hasInsufficientActivationBalance || isActiveQuotaFull}
+                                  type="submit"
+                                  title={
+                                    activationCost === null
+                                      ? 'Paket aktivasi default belum tersedia.'
+                                      : hasInsufficientActivationBalance
+                                        ? 'Saldo kredit tidak cukup untuk mengaktifkan toko klien ini.'
+                                        : isActiveQuotaFull
+                                          ? 'Kuota toko aktif Anda sudah penuh.'
+                                          : 'Aktifkan toko klien'
+                                  }
+                                  className="py-1.5 px-3 bg-brand-blue text-white border border-brand-blue hover:bg-blue-700 active:bg-blue-800 text-[10px] font-extrabold rounded-lg transition-all disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200"
+                                >
+                                  Aktifkan Toko
+                                </button>
+                              </form>
+                            </div>
+                          )}
+                          {isActive && (
+                            <span className="inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-extrabold text-emerald-700">
+                              Aktif
+                            </span>
+                          )}
+                          <button
+                            disabled
+                            type="button"
+                            title="Pengelolaan toko segera hadir"
+                            className="py-1 px-3 bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 active:bg-slate-200 text-[10px] font-bold rounded-lg transition-all cursor-not-allowed"
+                          >
+                            Kelola Toko
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
