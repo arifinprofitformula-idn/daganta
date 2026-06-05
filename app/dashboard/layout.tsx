@@ -1,4 +1,5 @@
 import React from 'react';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { PlatformRole } from '@prisma/client';
 import DashboardShell from '@/components/dashboard/dashboard-shell';
@@ -14,6 +15,9 @@ export default async function Layout({
 }: { 
   children: React.ReactNode 
 }) {
+  const headersList = await headers();
+  const dashboardPathname = headersList.get('x-daganta-pathname') || '';
+
   // 1. Evaluasi keanggotaan dan sesi otorisasi aktif secara terpusat
   const tenantCtx = await getActiveTenantContext();
 
@@ -30,10 +34,12 @@ export default async function Layout({
     : null;
   const isAgent = !!agentProfile;
   const isPlatformAdmin = tenantCtx.userProfile?.platformRole === PlatformRole.SUPER_ADMIN;
+  const isAdminRoute = dashboardPathname === '/dashboard/admin' || dashboardPathname.startsWith('/dashboard/admin/');
+  const isAgentRoute = dashboardPathname === '/dashboard/agent' || dashboardPathname.startsWith('/dashboard/agent/');
+  const canBypassNoMembership = (isAgent && isAgentRoute) || (isPlatformAdmin && isAdminRoute);
 
   // 3. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
-  // Namun bypass NO_MEMBERSHIP jika user adalah agent atau platform admin.
-  // Halaman admin tetap melakukan guard platformRole sendiri dan halaman toko tetap membutuhkan activeTenant.
+  // Bypass NO_MEMBERSHIP hanya berlaku untuk route agent/admin yang memang dijaga lagi oleh page terkait.
   if (tenantCtx.status === 'NO_PROFILE') {
     return (
       <AccountAccessState 
@@ -43,7 +49,7 @@ export default async function Layout({
     );
   }
 
-  if (tenantCtx.status === 'NO_MEMBERSHIP' && !isAgent && !isPlatformAdmin) {
+  if (tenantCtx.status === 'NO_MEMBERSHIP' && !canBypassNoMembership) {
     return (
       <AccountAccessState 
         error={tenantCtx.status} 
