@@ -1,5 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
+import { PlatformRole } from '@prisma/client';
 import DashboardShell from '@/components/dashboard/dashboard-shell';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import AccountAccessState from '@/components/dashboard/account-access-state';
@@ -28,9 +29,11 @@ export default async function Layout({
       })
     : null;
   const isAgent = !!agentProfile;
+  const isPlatformAdmin = tenantCtx.userProfile?.platformRole === PlatformRole.SUPER_ADMIN;
 
   // 3. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
-  // Namun bypass NO_MEMBERSHIP jika user adalah agent
+  // Namun bypass NO_MEMBERSHIP jika user adalah agent atau platform admin.
+  // Halaman admin tetap melakukan guard platformRole sendiri dan halaman toko tetap membutuhkan activeTenant.
   if (tenantCtx.status === 'NO_PROFILE') {
     return (
       <AccountAccessState 
@@ -40,7 +43,7 @@ export default async function Layout({
     );
   }
 
-  if (tenantCtx.status === 'NO_MEMBERSHIP' && !isAgent) {
+  if (tenantCtx.status === 'NO_MEMBERSHIP' && !isAgent && !isPlatformAdmin) {
     return (
       <AccountAccessState 
         error={tenantCtx.status} 
@@ -50,7 +53,7 @@ export default async function Layout({
   }
 
   // 4. Konteks toko aktif yang sah hasil saringan membership
-  const tenantName = tenantCtx.activeTenant?.name || agentProfile?.displayName || 'Nama Toko';
+  const tenantName = tenantCtx.activeTenant?.name || agentProfile?.displayName || (isPlatformAdmin ? 'Platform Admin' : 'Nama Toko');
 
   // 5. Query dynamic subscription policy and build warning banner
   let warningBanner = null;

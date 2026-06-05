@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { PlatformRole } from '@prisma/client';
 import { getCurrentUserProfile } from './session';
 import { getActiveTenantCookie, clearActiveTenantCookie } from './dashboard-tenant-cookie';
 
@@ -18,6 +19,7 @@ export interface TenantContext {
     email: string;
     name: string | null;
     authUserId: string | null;
+    platformRole: PlatformRole;
   } | null;
   activeTenant: SafeTenantInfo | null;
   activeMembership: {
