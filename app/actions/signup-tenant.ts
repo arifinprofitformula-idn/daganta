@@ -1,9 +1,8 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { prisma } from '../../lib/prisma';
-import { createClient } from '../../lib/supabase/server';
 import { setActiveTenantCookie } from '../../lib/auth/dashboard-tenant-cookie';
+import { getAuthAdapter } from '@/lib/platform/auth';
 import { 
   UserRole, 
   TenantStatus, 
@@ -117,24 +116,20 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
       return { success: false, error: 'Nama alamat toko sudah digunakan. Silakan pilih nama lain.' };
     }
 
-    // 3. Invoke Supabase Auth signUp
-    const supabase = await createClient();
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    // 3. Invoke configured auth provider signUp
+    const auth = await getAuthAdapter();
+    const signUpResult = await auth.signupAuthUser({
       email,
       password,
-      options: {
-        data: {
-          name: ownerName,
-          phone: whatsapp,
-        }
-      }
+      name: ownerName,
+      phone: whatsapp,
     });
 
-    if (signUpError || !signUpData.user) {
-      return { success: false, error: signUpError?.message || 'Gagal mendaftarkan akun di server keamanan.' };
+    if (!signUpResult.success || !signUpResult.authUser) {
+      return { success: false, error: signUpResult.error || 'Gagal mendaftarkan akun di server keamanan.' };
     }
 
-    const authUser = signUpData.user;
+    const authUser = signUpResult.authUser;
 
     // 4. Create UserProfile, Tenant, TenantMember OWNER, TenantSubscription TRIAL in one transaction
     try {
@@ -211,7 +206,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
       });
 
       // 5. Evaluate active session state immediately
-      const sessionCreated = !!signUpData.session;
+      const sessionCreated = signUpResult.sessionCreated;
 
       if (sessionCreated) {
         // Set the active tenant cookie for the dashboard
@@ -225,9 +220,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
     } catch (dbErr: any) {
       console.error('Database transaction failed during signup:', dbErr);
       
-      // TODO: Implement an asynchronous background orphan cleaner or manual worker to remove
-      // this orphaned Supabase Auth User ID (authUser.id) since we cannot perform service-role 
-      // requests from this client environment securely.
+      // TODO: Implement provider-specific orphan cleanup for external auth users in a future phase.
 
       return {
         success: false,

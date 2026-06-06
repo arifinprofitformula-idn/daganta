@@ -4,9 +4,13 @@ Dokumen ini adalah single source of truth untuk status roadmap pengembangan Daga
 
 ## Current Phase
 
-Bulan 5 - Agent Dashboard + Credit Management
+Beta Readiness & Full System Hardening.
 
-## Latest Closed Milestones
+## Current Step
+
+v0.5A Batch 2B Documentation Update: CURRENT
+
+## Closed Milestones
 
 1. v0.1A Database Schema Foundation: CLOSED
 2. v0.1B Supabase Dev Migration: CLOSED
@@ -28,29 +32,28 @@ Bulan 5 - Agent Dashboard + Credit Management
 18. v0.3F Public Signup & Trial Onboarding: CLOSED
 19. v0.4A Agent Schema & Migration: CLOSED
 20. v0.4B Agent Dashboard Shell: CLOSED
-
-## v0.4B Status Note
-
-Status v0.4B Agent Dashboard Shell ditandai CLOSED karena audit git menunjukkan commit checkpoint tersedia:
-
-`e849f00 feat: add agent dashboard shell`
-
-Status git sebelum pembuatan dokumen multi-agent juga bersih, sehingga v0.4B dapat diperlakukan sebagai milestone tertutup untuk perencanaan berikutnya.
+21. v0.4C Create Client Store Flow: CLOSED
+22. v0.4D Credit Deduction Flow: CLOSED
+23. v0.4E-A Platform Admin Role Foundation: CLOSED
+24. v0.4E Client Ownership Transfer: CLOSED
+25. v0.5A Batch 1 Beta Audit: CLOSED
+26. v0.5A Batch 2A Access Consistency Patch: CLOSED
 
 ## Next Milestone
 
-v0.4C Create Client Store Flow
+v0.5A Batch 3 Authenticated E2E QA
 
-## Roadmap Rule
+## Current Verification Baseline
 
-Jangan lompat ke v0.4D sampai v0.4C Create Client Store Flow selesai, verified, committed, dan dinyatakan closed.
+Latest verified checkpoint:
 
-## Current Constraints
+`5e50bda fix: tighten platform admin access guards`
 
-1. Jangan coding fitur baru sebelum task v0.4C didefinisikan dan disetujui.
-2. Jangan membuat schema change tanpa execution plan dan approval eksplisit.
-3. Jangan membuat migration tanpa approval eksplisit.
-4. Jangan menjalankan `prisma db push`.
-5. Jangan menjalankan `prisma migrate reset` tanpa approval eksplisit.
-6. Jangan menerapkan RLS baru tanpa approval eksplisit.
-7. Jangan deploy production tanpa approval eksplisit.
+Batch 1 audit and Batch 2A access consistency patch passed static verification. Authenticated E2E QA remains pending before beta.
+
+## Roadmap Rules
+
+1. Do not start beta user testing before authenticated tenant, agent, and platform admin QA passes.
+2. Do not add new features during v0.5A unless a critical bug fix is explicitly approved.
+3. Do not change schema, migration, RLS, env, or production deployment without explicit approval.
+4. Keep docs, guardrails, known risks, and QA plan synchronized at every beta-readiness checkpoint.

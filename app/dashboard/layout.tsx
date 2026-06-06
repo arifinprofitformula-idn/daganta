@@ -63,6 +63,12 @@ export default async function Layout({
 
   // 5. Query dynamic subscription policy and build warning banner
   let warningBanner = null;
+  const demoBanner = tenantCtx.user?.isDemo ? (
+    <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-xs font-bold leading-relaxed text-amber-900 shadow-sm">
+      Mode demo internal aktif. Sesi ini hanya untuk staging atau QA dan bukan autentikasi production.
+    </div>
+  ) : null;
+
   if (tenantCtx.activeTenant) {
     const policy = await getTenantSubscriptionPolicy(tenantCtx.activeTenant.id);
     if (policy.shouldShowWarning && policy.warningTitle && policy.warningMessage) {
@@ -98,6 +104,7 @@ export default async function Layout({
       isAgent={isAgent}
       hasTenant={!!tenantCtx.activeTenant}
     >
+      {demoBanner}
       {warningBanner}
       {children}
     </DashboardShell>

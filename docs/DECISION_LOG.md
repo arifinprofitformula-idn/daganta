@@ -83,3 +83,17 @@
 67. Annual pricing: bayar 10 bulan, aktif 12 bulan.
 68. Grace period ditetapkan 7 hari.
 69. Transaction commission MVP ditetapkan Rp0.
+70. Platform-level permission menggunakan `UserProfile.platformRole`.
+71. `TenantMember.role` tetap bersifat tenant-scoped dan tidak boleh menjadi sumber kebenaran izin platform.
+72. SUPER_ADMIN dashboard bypass dibatasi hanya untuk route `/dashboard/admin/*`.
+73. Agent dashboard bypass dibatasi hanya untuk route `/dashboard/agent/*`.
+74. Billing simulation helper menggunakan `platformRole = SUPER_ADMIN`.
+75. AgentClient ownership transfer dikendalikan oleh platform admin.
+76. Agent tidak boleh melakukan self-transfer ownership toko klien.
+77. Ownership transfer tidak membuat refund, invoice, billing mutation, atau perubahan AgentCreditLedger.
+78. Agent credit activation memotong saldo dan membuat ledger secara atomik mengikuti pola transaksi v0.4D.
+79. Public signup membuka trial 14 hari.
+80. Pembelian publik untuk program agen tetap dinonaktifkan dan diarahkan ke waitlist.
+81. Webhook payment tetap skeleton dan tidak melakukan mutasi `OrderPayment` atau `Order`.
+82. Notification tetap outbox skeleton dan tidak mengirim WhatsApp/email sungguhan.
+83. v0.5A difokuskan pada beta readiness, full system hardening, audit, dokumentasi, dan QA.

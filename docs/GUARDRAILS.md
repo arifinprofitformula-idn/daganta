@@ -21,11 +21,28 @@ Dokumen ini berisi batas aman utama untuk semua AI Agent dan developer yang meng
 
 ## Multi-Tenant Security
 
-1. Every business query must be tenant-scoped.
+1. Every tenant query must be tenant-scoped.
 2. Every business data model must include `tenantId` unless explicitly documented as global reference data.
 3. Do not trust client-submitted `tenantId` as source of truth.
 4. Tenant resolver must support subdomain access such as `toyanusantara.daganta.store`.
 5. Do not expose internal tenant metadata to unauthorized users.
+
+## Platform And Role Security
+
+1. Every platform admin action must use `UserProfile.platformRole = SUPER_ADMIN`.
+2. `TenantMember.role` remains tenant-scoped and must not authorize platform-level actions.
+3. No ownership transfer outside the `platformRole = SUPER_ADMIN` guard.
+4. No public client claim or invitation flow until explicitly approved.
+5. Agent dashboard bypass is limited to `/dashboard/agent/*`.
+6. Platform admin dashboard bypass is limited to `/dashboard/admin/*`.
+
+## Agent System
+
+1. Every agent mutation must be agent-scoped.
+2. No agent credit deduction outside the approved v0.4D transaction pattern.
+3. Agent credit ledger must be immutable by convention.
+4. AgentClient `tenantId` is unique for MVP.
+5. Agent must not lock in UMKM ownership; ownership transfer must remain platform-controlled until a future approved claim/invitation flow.
 
 ## Vendor And Integration
 
@@ -38,20 +55,11 @@ Dokumen ini berisi batas aman utama untuk semua AI Agent dan developer yang meng
 
 ## Product And Commerce
 
-1. No stock decrement unless stock policy approved.
+1. No stock decrement policy change unless approved.
 2. Payment buyer remains direct-to-tenant for MVP.
 3. Transaction commission MVP is Rp0.
 4. Daganta MVP is not an escrow.
 5. Payment gateway production is not active yet.
-
-## Agent System
-
-1. No agent credit deduction before v0.4D.
-2. No create client store before v0.4C.
-3. Agent Dashboard v0.4B is read-only.
-4. Agent credit ledger must be immutable.
-5. AgentClient `tenantId` is unique for MVP.
-6. Agent must not lock in UMKM ownership; ownership transfer must be prepared.
 
 ## Domain And Release
 
@@ -63,5 +71,6 @@ Dokumen ini berisi batas aman utama untuk semua AI Agent dan developer yang meng
 
 1. Every milestone must end with commit checkpoint.
 2. Every change must have verification command.
-3. Do not jump roadmap milestone without approval.
-4. Do not start v0.4D until v0.4C passes verification and is closed.
+3. Every schema change must have migration and verification.
+4. Do not jump roadmap milestone without approval.
+5. Do not proceed to beta user testing until authenticated E2E QA passes.

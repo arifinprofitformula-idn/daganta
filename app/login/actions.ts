@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthAdapter } from '@/lib/platform/auth';
 
 export async function login(formData: FormData) {
   const email = formData.get('email') as string;
@@ -11,16 +11,11 @@ export async function login(formData: FormData) {
     redirect('/login?error=' + encodeURIComponent('Email dan kata sandi wajib diisi.'));
   }
 
-  const supabase = await createClient();
+  const auth = await getAuthAdapter();
+  const result = await auth.loginWithPassword(email, password);
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    // Redirect ke login dengan pesan error jika otentikasi gagal
-    redirect('/login?error=' + encodeURIComponent(error.message));
+  if (!result.success) {
+    redirect('/login?error=' + encodeURIComponent(result.error || 'Login belum berhasil.'));
   }
 
   // Pengalihan ke dasbor setelah login berhasil
@@ -28,8 +23,8 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  const auth = await getAuthAdapter();
+  await auth.logout();
   
   // Pengalihan kembali ke login setelah keluar
   redirect('/login');
