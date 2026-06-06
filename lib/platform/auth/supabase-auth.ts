@@ -60,57 +60,76 @@ export const supabaseAuthAdapter: AuthProviderAdapter = {
   },
 
   async loginWithPassword(email: string, password: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      return { success: false, error: error.message };
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    } catch {
+      return {
+        success: false,
+        error: 'Login Supabase belum tersedia karena konfigurasi Supabase belum lengkap.',
+      };
     }
 
     return { success: true };
   },
 
   async logout() {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
+    try {
+      const supabase = await createClient();
+      await supabase.auth.signOut();
+    } catch {
+      return;
+    }
   },
 
   async signupAuthUser(input: SignupAuthInput) {
-    const supabase = await createClient();
-    const {
-      data: signUpData,
-      error,
-    } = await supabase.auth.signUp({
-      email: input.email,
-      password: input.password,
-      options: {
-        data: {
-          name: input.name,
-          phone: input.phone,
+    try {
+      const supabase = await createClient();
+      const {
+        data: signUpData,
+        error,
+      } = await supabase.auth.signUp({
+        email: input.email,
+        password: input.password,
+        options: {
+          data: {
+            name: input.name,
+            phone: input.phone,
+          },
         },
-      },
-    });
+      });
 
-    if (error || !signUpData.user) {
+      if (error || !signUpData.user) {
+        return {
+          success: false,
+          error: error?.message || 'Gagal mendaftarkan akun di server keamanan.',
+          sessionCreated: false,
+        };
+      }
+
+      return {
+        success: true,
+        authUser: {
+          id: signUpData.user.id,
+          email: signUpData.user.email || input.email,
+          user_metadata: signUpData.user.user_metadata,
+          app_metadata: signUpData.user.app_metadata,
+        },
+        sessionCreated: !!signUpData.session,
+      };
+    } catch {
       return {
         success: false,
-        error: error?.message || 'Gagal mendaftarkan akun di server keamanan.',
+        error: 'Signup Supabase belum tersedia karena konfigurasi Supabase belum lengkap.',
         sessionCreated: false,
       };
     }
-
-    return {
-      success: true,
-      authUser: {
-        id: signUpData.user.id,
-        email: signUpData.user.email || input.email,
-        user_metadata: signUpData.user.user_metadata,
-        app_metadata: signUpData.user.app_metadata,
-      },
-      sessionCreated: !!signUpData.session,
-    };
   },
 };
