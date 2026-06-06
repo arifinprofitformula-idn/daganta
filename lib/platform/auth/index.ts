@@ -1,5 +1,5 @@
 import type { PlatformRole } from '@prisma/client';
-import { getAuthProvider } from '@/lib/config/env';
+import { getAuthProvider, hasSupabasePublicConfig } from '@/lib/config/env';
 
 export interface PlatformAuthUser {
   id: string;
@@ -48,7 +48,7 @@ export interface AuthProviderAdapter {
 export async function getAuthAdapter(): Promise<AuthProviderAdapter> {
   const provider = getAuthProvider();
 
-  if (provider === 'supabase') {
+  if (provider === 'supabase' && hasSupabasePublicConfig()) {
     const mod = await import('./supabase-auth');
     return mod.supabaseAuthAdapter;
   }

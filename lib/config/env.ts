@@ -43,6 +43,13 @@ export function getSupabasePublicConfig() {
   return { url, key };
 }
 
+export function hasSupabasePublicConfig() {
+  const url = readEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const key = readEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') || readEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+  return Boolean(url && key);
+}
+
 export function requireSupabaseServiceRoleKey() {
   const key = readEnv('SUPABASE_SERVICE_ROLE_KEY');
 
