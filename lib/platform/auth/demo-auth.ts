@@ -5,6 +5,15 @@ import type { AuthProviderAdapter } from './index';
 const DEMO_USER_EMAIL = 'owner.toya@daganta.com';
 const DEMO_USER_ID = 'demo:toya-owner';
 
+function isPrismaConnectionError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === 'P1017'
+  );
+}
+
 export const demoAuthAdapter: AuthProviderAdapter = {
   async getCurrentUser() {
     assertDemoAuthEnabled();
@@ -26,9 +35,17 @@ export const demoAuthAdapter: AuthProviderAdapter = {
       return null;
     }
 
-    const profile = await prisma.userProfile.findUnique({
-      where: { email: DEMO_USER_EMAIL },
-    });
+    let profile = null;
+
+    try {
+      profile = await prisma.userProfile.findUnique({
+        where: { email: DEMO_USER_EMAIL },
+      });
+    } catch (error) {
+      if (!isPrismaConnectionError(error)) {
+        throw error;
+      }
+    }
 
     return {
       user,
