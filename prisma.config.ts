@@ -41,6 +41,10 @@ function loadEnvFile(path: string) {
 loadEnvFile(resolve(process.cwd(), '.env'));
 loadEnvFile(resolve(process.cwd(), '.env.local'));
 
+if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
+  process.env.DIRECT_URL = process.env.DATABASE_URL;
+}
+
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
