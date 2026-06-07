@@ -13,7 +13,7 @@ RUN apt-get update \
 FROM base AS deps
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN NODE_ENV=development npm ci --include=dev
 
 FROM base AS prod-deps
 
