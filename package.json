@@ -7,7 +7,8 @@
     "build": "next build",
     "migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "start": "prisma migrate deploy && next start",
+    "start": "next start -H 0.0.0.0",
+    "docker:start": "sh scripts/docker-start.sh",
     "lint": "next lint"
   },
   "dependencies": {
