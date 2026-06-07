@@ -6,6 +6,15 @@ export async function getCurrentUser() {
   return auth.getCurrentUser();
 }
 
+function isRecoverablePrismaBootstrapError(error: unknown) {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? (error as { code?: string }).code
+      : null;
+
+  return code === 'P1017' || code === 'P2021';
+}
+
 export interface UserAuthProfile {
   user: any;
   profile: {
@@ -20,5 +29,14 @@ export interface UserAuthProfile {
 
 export async function getCurrentUserProfile(): Promise<UserAuthProfile | null> {
   const auth = await getAuthAdapter();
-  return auth.getCurrentUserProfile();
+
+  try {
+    return await auth.getCurrentUserProfile();
+  } catch (error) {
+    if (isRecoverablePrismaBootstrapError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 }
