@@ -1,3 +1,4 @@
+# Clear cache trigger: 2026-06-14
 FROM node:20-bookworm-slim AS base
 
 WORKDIR /app
