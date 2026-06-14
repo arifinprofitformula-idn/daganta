@@ -1,9 +1,7 @@
 #!/bin/sh
 set -e
 
-if [ "$SKIP_MIGRATIONS" = "true" ]; then
-  echo "Skipping Prisma migrations because SKIP_MIGRATIONS=true."
-else
+if [ "$RUN_MIGRATIONS" = "true" ]; then
   MIGRATION_TIMEOUT_SECONDS="${MIGRATION_TIMEOUT_SECONDS:-60}"
   echo "Running Prisma migrations with ${MIGRATION_TIMEOUT_SECONDS}s timeout..."
 
@@ -12,9 +10,16 @@ else
   else
     npx prisma migrate deploy
   fi
+else
+  echo "Skipping Prisma migrations. Run the dedicated migrator release step before deployment."
 fi
 
 if [ "$RUN_DB_SEED" = "true" ]; then
+  if [ "$ALLOW_DB_SEED" != "true" ]; then
+    echo "Refusing to seed because ALLOW_DB_SEED is not true."
+    exit 1
+  fi
+
   echo "Running database seed..."
   npx prisma db seed
 fi

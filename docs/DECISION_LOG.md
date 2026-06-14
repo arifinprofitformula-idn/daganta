@@ -12,7 +12,7 @@
    - Tailwind CSS
    - shadcn/ui
    - Prisma
-   - Supabase PostgreSQL
+   - Managed PostgreSQL (Sumobase)
    - Vercel
 6. Domain staging adalah daganta.store.
 7. Domain production adalah daganta.id.
@@ -97,3 +97,9 @@
 81. Webhook payment tetap skeleton dan tidak melakukan mutasi `OrderPayment` atau `Order`.
 82. Notification tetap outbox skeleton dan tidak mengirim WhatsApp/email sungguhan.
 83. v0.5A difokuskan pada beta readiness, full system hardening, audit, dokumentasi, dan QA.
+84. VPS deployment menggunakan container Next.js standalone di belakang reverse proxy. Database PostgreSQL dikelola Sumobase; Supabase bukan provider database dan hanya tetap menjadi adapter opsional untuk Auth/Storage.
+85. Prisma production migration dijalankan sebagai release step terpisah dan tidak dijalankan saat container aplikasi start atau restart.
+86. Docker image aplikasi berjalan sebagai non-root user dan memiliki liveness endpoint; deployment readiness memverifikasi koneksi database.
+87. Root domain dan wildcard tenant wajib diarahkan ke aplikasi yang sama dengan header Host asli dipertahankan oleh reverse proxy.
+88. Sumobase Transaction Pooler digunakan untuk `DATABASE_URL` runtime, sedangkan Prisma migration wajib memakai connection string terpisah dari Sumobase Direct Connection melalui `DIRECT_URL`.
+89. Draf RLS yang bergantung pada Supabase `auth.uid()` tidak boleh diterapkan ke Sumobase tanpa redesign identitas dan policy database-level.

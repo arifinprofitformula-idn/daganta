@@ -20,7 +20,8 @@ Tidak ada risiko Critical terbuka dari Batch 1 audit dan Batch 2A access consist
 
 2. Belum ada RLS enforcement aktif.
    - Impact: Isolasi tenant bergantung pada application-level tenant-scoped query.
-   - Mitigation: Jangan apply RLS tanpa approval; lanjutkan audit query dan rancang RLS rollout terpisah.
+   - Additional risk: Draf RLS saat ini bergantung pada Supabase `auth.uid()` dan tidak kompatibel langsung dengan Sumobase PostgreSQL.
+   - Mitigation: Jangan apply draf RLS Supabase ke Sumobase; lanjutkan audit query dan rancang strategi database-level isolation yang provider-compatible.
 
 3. Belum ada notification provider sungguhan.
    - Impact: WhatsApp/email belum terkirim ke pengguna nyata.
@@ -38,10 +39,6 @@ Tidak ada risiko Critical terbuka dari Batch 1 audit dan Batch 2A access consist
    - Impact: Saldo agen belum bisa diisi sendiri melalui UI/flow production.
    - Mitigation: Gunakan kontrol internal/manual sampai roadmap top-up disetujui.
 
-7. Belum ada production deployment checklist.
-   - Impact: Risiko operasional sebelum go-live.
-   - Mitigation: Buat checklist deployment sebelum production deploy.
-
 ## Low
 
 1. Prisma `package.json#prisma` config deprecation warning.
@@ -55,3 +52,7 @@ Tidak ada risiko Critical terbuka dari Batch 1 audit dan Batch 2A access consist
 3. Some authenticated UI smoke checks depend on real sessions.
    - Impact: QA otomatis terbatas tanpa seeded auth sessions/browser state.
    - Mitigation: Siapkan test account placeholders dan jalankan QA manual/authenticated di Batch 3.
+
+4. Product images are still stored as base64 values in the database.
+   - Impact: Database size, request payload, backup duration, and page rendering cost can grow quickly.
+   - Mitigation: Move product image upload to Supabase Storage before production image volume increases.

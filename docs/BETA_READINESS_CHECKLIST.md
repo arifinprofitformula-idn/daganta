@@ -12,7 +12,7 @@ Status saat ini:
 - [x] Git status clean after latest verified checkpoint.
 - [x] `npm run build` passes.
 - [x] `git diff --check` passes.
-- [ ] Production deployment checklist documented.
+- [x] Production deployment checklist documented.
 
 ## Migration Health
 
