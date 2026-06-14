@@ -33,8 +33,12 @@ ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN DATABASE_URL="$BUILD_DATABASE_URL" DIRECT_URL="$BUILD_DIRECT_URL" npx prisma generate
-RUN DATABASE_URL="$BUILD_DATABASE_URL" DIRECT_URL="$BUILD_DIRECT_URL" npm run build
+RUN DATABASE_URL="${BUILD_DATABASE_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+  DIRECT_URL="${BUILD_DIRECT_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+  npx prisma generate
+RUN DATABASE_URL="${BUILD_DATABASE_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+  DIRECT_URL="${BUILD_DIRECT_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+  npm run build
 
 FROM base AS migrator
 

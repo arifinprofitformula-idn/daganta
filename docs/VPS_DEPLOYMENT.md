@@ -191,6 +191,10 @@ Konfigurasi penting:
 - build target aplikasi: `runner`;
 - health path: `/api/health/ready`;
 - `NEXT_PUBLIC_*` ditandai tersedia saat build;
+- jangan membuat `BUILD_DATABASE_URL` atau `BUILD_DIRECT_URL` sebagai Coolify
+  build variable kosong; hapus kedua variable tersebut jika tidak dipakai;
+- database production tidak diperlukan saat image dibangun. Dockerfile memakai
+  placeholder PostgreSQL yang tidak dihubungi selama build;
 - runtime environment mengikuti bagian Environment;
 - root domain dan wildcard tenant diarahkan ke resource yang sama;
 - migration dijalankan sebagai release job terpisah menggunakan target
@@ -199,6 +203,16 @@ Konfigurasi penting:
 Jika panel tidak menyediakan release job yang berjalan tepat sekali, jalankan
 target migrator dari CI atau terminal VPS sebelum meminta Coolify melakukan
 rollout aplikasi.
+
+Jika log build menampilkan:
+
+```text
+DATABASE_URL="$BUILD_DATABASE_URL" DIRECT_URL="$BUILD_DIRECT_URL" npm run build
+```
+
+dan build variable tersebut kosong, pastikan deployment memakai Dockerfile
+terbaru. Fallback placeholder diterapkan di dalam shell agar build argument
+kosong dari Coolify tidak menghasilkan `DATABASE_URL=""`.
 
 ## 7. Release Procedure
 
