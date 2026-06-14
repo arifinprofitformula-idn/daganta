@@ -16,8 +16,8 @@ RUN npm ci
 
 FROM base AS builder
 
-ARG BUILD_DATABASE_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public"
-ARG BUILD_DIRECT_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public"
+RUN echo "Daganta deterministic build environment v2"
+
 ARG NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ARG NEXT_PUBLIC_STOREFRONT_ROOT_DOMAIN="daganta.store"
 ARG NEXT_PUBLIC_SUPABASE_URL=""
@@ -33,11 +33,11 @@ ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN DATABASE_URL="${BUILD_DATABASE_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
-  DIRECT_URL="${BUILD_DIRECT_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+RUN DATABASE_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public" \
+  DIRECT_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public" \
   npx prisma generate
-RUN DATABASE_URL="${BUILD_DATABASE_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
-  DIRECT_URL="${BUILD_DIRECT_URL:-postgresql://daganta:daganta@localhost:5432/daganta?schema=public}" \
+RUN DATABASE_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public" \
+  DIRECT_URL="postgresql://daganta:daganta@localhost:5432/daganta?schema=public" \
   npm run build
 
 FROM base AS migrator

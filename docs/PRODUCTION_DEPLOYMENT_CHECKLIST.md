@@ -38,7 +38,7 @@
 ## Environment
 
 - [ ] `.env.production` hanya tersedia di server/secret manager.
-- [ ] Coolify tidak mengirim `BUILD_DATABASE_URL`/`BUILD_DIRECT_URL` kosong.
+- [ ] `BUILD_DATABASE_URL` dan `BUILD_DIRECT_URL` tidak ada di Coolify.
 - [ ] `DATABASE_URL` menggunakan Sumobase Transaction Pooler.
 - [ ] `DIRECT_URL` menggunakan Sumobase Direct Connection.
 - [ ] `DATABASE_URL` dan `DIRECT_URL` tidak memakai connection string yang sama.
