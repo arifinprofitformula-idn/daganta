@@ -1,7 +1,7 @@
 import React from 'react';
 import { getCategoriesByTenantId } from '@/lib/data-access/products';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
-import { ProductForm } from '@/components/dashboard/product-form';
+import { ProductForm } from '@/components/dashboard/products/ProductForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +19,13 @@ export default async function NewProductPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <ProductForm categories={activeCategories} />
+      <ProductForm
+        mode="create"
+        categories={activeCategories.map((category) => ({
+          id: category.id,
+          name: category.name,
+        }))}
+      />
     </div>
   );
 }
