@@ -54,10 +54,10 @@ async function main() {
   loadEnvFile('.env.local');
   loadEnvFile('.env');
 
-  const databaseUrl = process.env.RLS_VERIFY_DATABASE_URL ?? process.env.DATABASE_URL;
+  const databaseUrl = process.env.RLS_VERIFY_DATABASE_URL ?? process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    console.error('RLS verification failed: RLS_VERIFY_DATABASE_URL or DATABASE_URL is required.');
+    console.error('RLS verification failed: RLS_VERIFY_DATABASE_URL, DIRECT_URL, or DATABASE_URL is required.');
     process.exit(1);
   }
 

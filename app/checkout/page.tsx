@@ -16,7 +16,7 @@ export default async function CheckoutPage() {
     return <MarketingHome />;
   }
 
-  if (result.status === 'NOT_FOUND') {
+  if (result.status === 'NOT_FOUND' || result.status === 'RESERVED') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">

@@ -2,12 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // 1. Programmatic in-memory env loader
-function loadEnvLocal() {
-  const envPath = path.resolve(process.cwd(), '.env.local');
+function loadEnvFile(fileName: string) {
+  const envPath = path.resolve(process.cwd(), fileName);
   
   if (!fs.existsSync(envPath)) {
-    console.error('Error: .env.local file not found in workspace.');
-    process.exit(1);
+    return;
   }
 
   try {
@@ -21,15 +20,9 @@ function loadEnvLocal() {
         if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
           value = value.substring(1, value.length - 1);
         }
-        process.env[key] = value;
+        process.env[key] ??= value;
       }
     });
-
-    // 2. Validate essential DB env variable securely without printing it
-    if (!process.env.DATABASE_URL) {
-      console.error('Error: DATABASE_URL is missing in environment configuration.');
-      process.exit(1);
-    }
   } catch {
     console.error('Error: Failed to parse configuration file securely.');
     process.exit(1);
@@ -37,7 +30,13 @@ function loadEnvLocal() {
 }
 
 // Execute env loading
-loadEnvLocal();
+loadEnvFile('.env.local');
+loadEnvFile('.env');
+
+if (!process.env.DATABASE_URL) {
+  console.error('Error: DATABASE_URL is missing in environment configuration.');
+  process.exit(1);
+}
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
