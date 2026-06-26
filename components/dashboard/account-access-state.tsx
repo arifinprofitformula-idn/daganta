@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { AlertCircle, LogOut } from 'lucide-react';
-import { logout } from '@/app/login/actions';
 
 interface AccountAccessStateProps {
   error: 'NO_PROFILE' | 'NO_MEMBERSHIP';
@@ -52,14 +51,15 @@ export default function AccountAccessState({ error, userEmail }: AccountAccessSt
 
         {/* Action Button: Logout */}
         <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => logout()}
-            className="w-full py-3 px-4 bg-slate-950 hover:bg-slate-850 active:bg-slate-800 text-slate-350 hover:text-rose-450 border border-slate-800 hover:border-rose-950/30 font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            <span>Keluar & Ganti Akun</span>
-          </button>
+          <form action="/logout" method="post">
+            <button
+              type="submit"
+              className="w-full py-3 px-4 bg-slate-950 hover:bg-slate-850 active:bg-slate-800 text-slate-350 hover:text-rose-450 border border-slate-800 hover:border-rose-950/30 font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span>Keluar & Ganti Akun</span>
+            </button>
+          </form>
         </div>
 
         {/* Footer Info */}

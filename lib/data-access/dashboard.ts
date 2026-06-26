@@ -14,6 +14,10 @@ export interface DashboardSummary {
   customerCount: number;
 }
 
+/**
+ * Resolves a tenant by subdomain, then performs all business counts with that tenant id.
+ * Prefer getDashboardSummaryByTenantId when the authenticated dashboard already has tenantId.
+ */
 export async function getDashboardSummaryBySubdomain(subdomain: string): Promise<DashboardSummary | null> {
   if (!subdomain) {
     throw new Error('Subdomain is required for tenant-scoped dashboard queries');
@@ -60,6 +64,10 @@ export async function getDashboardSummaryBySubdomain(subdomain: string): Promise
   };
 }
 
+/**
+ * Returns dashboard summary for one tenant only.
+ * Every business query in this function must include the provided tenantId.
+ */
 export async function getDashboardSummaryByTenantId(tenantId: string): Promise<DashboardSummary | null> {
   if (!tenantId) {
     throw new Error('Tenant ID is required for tenant-scoped dashboard queries');

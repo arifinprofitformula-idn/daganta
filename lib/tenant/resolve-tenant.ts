@@ -3,15 +3,58 @@ import { prisma } from '../prisma';
 import { TenantResolveResult } from './types';
 import { getTenantSubscriptionPolicy } from '../billing/lifecycle';
 
+const RESERVED_SUBDOMAINS = new Set(['app', 'api', 'admin']);
+const TENANT_RESOLVE_CACHE_TTL_MS = 60_000;
+const tenantResolveCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    result: TenantResolveResult;
+  }
+>();
+
+function createResult(result: Omit<TenantResolveResult, 'suspended'> & { suspended?: boolean }): TenantResolveResult {
+  return {
+    ...result,
+    suspended: result.suspended ?? false,
+  };
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Unknown error occurred during tenant resolution';
+}
+
+function getCachedResult(cacheKey: string) {
+  const cached = tenantResolveCache.get(cacheKey);
+
+  if (!cached) {
+    return null;
+  }
+
+  if (cached.expiresAt <= Date.now()) {
+    tenantResolveCache.delete(cacheKey);
+    return null;
+  }
+
+  return cached.result;
+}
+
+function setCachedResult(cacheKey: string, result: TenantResolveResult) {
+  tenantResolveCache.set(cacheKey, {
+    expiresAt: Date.now() + TENANT_RESOLVE_CACHE_TTL_MS,
+    result,
+  });
+}
+
 export async function resolveTenantFromHost(hostname: string): Promise<TenantResolveResult> {
   try {
     if (!hostname) {
-      return {
+      return createResult({
         status: 'NOT_FOUND',
         accessMode: 'NOT_FOUND',
         tenant: null,
         error: 'Hostname is empty'
-      };
+      });
     }
 
     // 1. Normalize hostname (remove port and convert to lowercase)
@@ -36,13 +79,22 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
       (vercelUrl && cleanHost === vercelUrl) ||
       (cleanHost.endsWith('.vercel.app') && cleanHost.includes('daganta-staging'));
 
+    const cacheKey = `${rootDomain}:${cleanHost}`;
+    const cachedResult = getCachedResult(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     if (marketingSites.has(cleanHost) || isVercelPreview) {
-      return {
+      const result = createResult({
         status: 'MARKETING_SITE',
         accessMode: 'MARKETING_SITE',
         tenant: null,
         error: null
-      };
+      });
+      setCachedResult(cacheKey, result);
+      return result;
     }
 
     // 3. Extract subdomain
@@ -64,12 +116,36 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
     }
 
     if (!subdomain) {
-      return {
+      const result = createResult({
         status: 'NOT_FOUND',
         accessMode: 'NOT_FOUND',
         tenant: null,
         error: `Failed to extract subdomain from hostname: ${hostname}`
-      };
+      });
+      setCachedResult(cacheKey, result);
+      return result;
+    }
+
+    if (subdomain === 'www') {
+      const result = createResult({
+        status: 'MARKETING_SITE',
+        accessMode: 'MARKETING_SITE',
+        tenant: null,
+        error: null,
+      });
+      setCachedResult(cacheKey, result);
+      return result;
+    }
+
+    if (RESERVED_SUBDOMAINS.has(subdomain)) {
+      const result = createResult({
+        status: 'RESERVED',
+        accessMode: 'RESERVED',
+        tenant: null,
+        error: `Reserved subdomain: ${subdomain}`,
+      });
+      setCachedResult(cacheKey, result);
+      return result;
     }
 
     // 4. Query Tenant in database
@@ -78,12 +154,34 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
     });
 
     if (!tenant) {
-      return {
+      const result = createResult({
         status: 'NOT_FOUND',
         accessMode: 'NOT_FOUND',
         tenant: null,
         error: `Tenant not found for subdomain: ${subdomain}`
-      };
+      });
+      setCachedResult(cacheKey, result);
+      return result;
+    }
+
+    const resolvedTenant = {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      subdomain: tenant.subdomain,
+      status: tenant.status
+    };
+
+    if (tenant.status === TenantStatus.SUSPENDED) {
+      const result = createResult({
+        status: 'SUSPENDED',
+        accessMode: 'SUSPENDED',
+        tenant: resolvedTenant,
+        suspended: true,
+        error: 'Tenant is suspended',
+      });
+      setCachedResult(cacheKey, result);
+      return result;
     }
 
     // 5. Map computed Subscription Policy to TenantAccessMode
@@ -101,24 +199,20 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
       accessMode = 'STOREFRONT_FULL';
     }
 
-    return {
+    const result = createResult({
       status,
       accessMode,
-      tenant: {
-        id: tenant.id,
-        name: tenant.name,
-        slug: tenant.slug,
-        subdomain: tenant.subdomain,
-        status: tenant.status
-      },
+      tenant: resolvedTenant,
       error: null
-    };
-  } catch (e: any) {
-    return {
+    });
+    setCachedResult(cacheKey, result);
+    return result;
+  } catch (error: unknown) {
+    return createResult({
       status: 'NOT_FOUND',
       accessMode: 'NOT_FOUND',
       tenant: null,
-      error: e.message || 'Unknown error occurred during tenant resolution'
-    };
+      error: getErrorMessage(error)
+    });
   }
 }

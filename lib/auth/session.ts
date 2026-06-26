@@ -1,18 +1,10 @@
 import type { PlatformRole } from '@prisma/client';
 import { getAuthAdapter } from '@/lib/platform/auth';
+import { isRecoverablePrismaConnectionError } from '@/lib/prisma-errors';
 
 export async function getCurrentUser() {
   const auth = await getAuthAdapter();
   return auth.getCurrentUser();
-}
-
-function isRecoverablePrismaBootstrapError(error: unknown) {
-  const code =
-    typeof error === 'object' && error !== null && 'code' in error
-      ? (error as { code?: string }).code
-      : null;
-
-  return code === 'P1017' || code === 'P2021';
 }
 
 export interface UserAuthProfile {
@@ -33,7 +25,7 @@ export async function getCurrentUserProfile(): Promise<UserAuthProfile | null> {
   try {
     return await auth.getCurrentUserProfile();
   } catch (error) {
-    if (isRecoverablePrismaBootstrapError(error)) {
+    if (isRecoverablePrismaConnectionError(error)) {
       return null;
     }
 

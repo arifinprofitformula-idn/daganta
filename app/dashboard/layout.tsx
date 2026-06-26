@@ -2,11 +2,13 @@ import React from 'react';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { PlatformRole } from '@prisma/client';
-import DashboardShell from '@/components/dashboard/dashboard-shell';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import AccountAccessState from '@/components/dashboard/account-access-state';
 import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 import { prisma } from '@/lib/prisma';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { DashboardTopbar } from '@/components/dashboard/DashboardTopbar';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +20,28 @@ export default async function Layout({
   const headersList = await headers();
   const dashboardPathname = headersList.get('x-daganta-pathname') || '';
 
-  // 1. Evaluasi keanggotaan dan sesi otorisasi aktif secara terpusat
+  // 1. Defense in depth: validasi sesi Supabase di server layout.
+  let sessionUser = null;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    sessionUser = user;
+  } catch {
+    redirect('/login');
+  }
+
+  if (!sessionUser) {
+    redirect('/login');
+  }
+
+  // 2. Evaluasi keanggotaan dan sesi otorisasi aktif secara terpusat
   const tenantCtx = await getActiveTenantContext();
 
-  // 2. Jika tidak ada sesi user aktif, langsung alihkan ke login
+  // 3. Jika tidak ada sesi user aktif, langsung alihkan ke login
   if (!tenantCtx.user) {
     redirect('/login');
   }
@@ -38,7 +58,7 @@ export default async function Layout({
   const isAgentRoute = dashboardPathname === '/dashboard/agent' || dashboardPathname.startsWith('/dashboard/agent/');
   const canBypassNoMembership = (isAgent && isAgentRoute) || (isPlatformAdmin && isAdminRoute);
 
-  // 3. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
+  // 4. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
   // Bypass NO_MEMBERSHIP hanya berlaku untuk route agent/admin yang memang dijaga lagi oleh page terkait.
   if (tenantCtx.status === 'NO_PROFILE') {
     return (
@@ -58,10 +78,15 @@ export default async function Layout({
     );
   }
 
-  // 4. Konteks toko aktif yang sah hasil saringan membership
+  // 5. Konteks toko aktif yang sah hasil saringan membership
   const tenantName = tenantCtx.activeTenant?.name || agentProfile?.displayName || (isPlatformAdmin ? 'Platform Admin' : 'Nama Toko');
+  const sessionUserName =
+    typeof sessionUser.user_metadata?.name === 'string'
+      ? sessionUser.user_metadata.name
+      : tenantCtx.userProfile?.name || null;
+  const sessionUserEmail = sessionUser.email || tenantCtx.user.email || '';
 
-  // 5. Query dynamic subscription policy and build warning banner
+  // 6. Query dynamic subscription policy and build warning banner
   let warningBanner = null;
   const demoBanner = tenantCtx.user?.isDemo ? (
     <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-xs font-bold leading-relaxed text-amber-900 shadow-sm">
@@ -95,18 +120,25 @@ export default async function Layout({
   }
 
   return (
-    <DashboardShell 
-      tenantName={tenantName}
-      userEmail={tenantCtx.user.email || ''}
-      hasProfile={true}
-      activeTenant={tenantCtx.activeTenant}
-      availableTenants={tenantCtx.availableTenants || []}
-      isAgent={isAgent}
-      hasTenant={!!tenantCtx.activeTenant}
-    >
-      {demoBanner}
-      {warningBanner}
-      {children}
-    </DashboardShell>
+    <div className="flex min-h-screen bg-slate-50 text-slate-950">
+      <div className="hidden min-h-screen shrink-0 md:block">
+        <DashboardSidebar tenantName={tenantName} ownerName="Owner Toko" />
+      </div>
+
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <DashboardTopbar
+          tenantName={tenantName}
+          userName={sessionUserName}
+          userEmail={sessionUserEmail}
+        />
+        <main className="flex-1 p-4 md:p-8">
+          <div className="mx-auto w-full max-w-7xl space-y-6">
+            {demoBanner}
+            {warningBanner}
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }

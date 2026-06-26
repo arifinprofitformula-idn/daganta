@@ -1,8 +1,7 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
-import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
+import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
 import { OrderStatus, PaymentMethod, PaymentProvider, NotificationChannel, NotificationEventType } from '@prisma/client';
 import { getTenantSubscriptionPolicy } from '../../lib/billing/lifecycle';
 import { manualPaymentAdapter } from '../../lib/payments';
@@ -52,9 +51,7 @@ export async function processCheckout(payload: CheckoutPayload) {
     if (!items || items.length === 0) return { success: false, error: 'Keranjang belanja kosong.' };
 
     // 2. Resolusi Tenant dari domain host aktif
-    const headersList = await headers();
-    const host = headersList.get('host') ?? '';
-    const resolution = await resolveTenantFromHost(host);
+    const resolution = await getStorefrontTenantContext();
 
     if (resolution.status !== 'SUCCESS' || !resolution.tenant) {
       return { success: false, error: 'Toko tidak aktif atau tidak ditemukan.' };
@@ -286,11 +283,14 @@ export async function processCheckout(payload: CheckoutPayload) {
       orderId: order.id,
       orderNumber: order.orderNumber,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Checkout error:', error);
     return {
       success: false,
-      error: error.message || 'Terjadi kesalahan sistem saat memproses pemesanan Anda. Silakan coba beberapa saat lagi.',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan sistem saat memproses pemesanan Anda. Silakan coba beberapa saat lagi.',
     };
   }
 }

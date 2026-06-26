@@ -1,7 +1,6 @@
-import { headers } from 'next/headers';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveTenantFromHost } from '../../../../lib/tenant/resolve-tenant';
+import { getStorefrontTenantContext } from '../../../../lib/tenant/storefront-tenant';
 import { prisma } from '../../../../lib/prisma';
 import { getTenantThemeConfig, TenantThemeConfig } from '../../../../lib/tenant/theme-config';
 import MarketingHome from '../../../../components/marketing/marketing-home';
@@ -15,17 +14,15 @@ interface PageProps {
 
 export default async function SuccessPage({ params }: PageProps) {
   const { orderId } = await params;
-  const headersList = await headers();
-  const host = headersList.get('host') ?? '';
 
   // 1. Resolusi Tenant
-  const result = await resolveTenantFromHost(host);
+  const result = await getStorefrontTenantContext();
 
   if (result.status === 'MARKETING_SITE') {
     return <MarketingHome />;
   }
 
-  if (result.status === 'NOT_FOUND') {
+  if (result.status === 'NOT_FOUND' || result.status === 'RESERVED' || result.status === 'SUSPENDED') {
     return notFound();
   }
 

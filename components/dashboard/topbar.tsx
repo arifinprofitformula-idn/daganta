@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { LogOut, Search, Bell, User } from 'lucide-react';
-import { logout } from '@/app/login/actions';
 import TenantSwitcher from './tenant-switcher';
 
 interface TopbarProps {
@@ -74,14 +73,15 @@ export default function Topbar({
         </div>
 
         {/* Logout Button */}
-        <button
-          type="button"
-          onClick={() => logout()}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-500 hover:text-rose-600 border border-brand-border rounded-xl text-[10px] font-bold transition-all shadow-sm select-none"
-        >
-          <LogOut className="w-3.5 h-3.5 shrink-0" />
-          <span>Keluar</span>
-        </button>
+        <form action="/logout" method="post">
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-500 hover:text-rose-600 border border-brand-border rounded-xl text-[10px] font-bold transition-all shadow-sm select-none"
+          >
+            <LogOut className="w-3.5 h-3.5 shrink-0" />
+            <span>Keluar</span>
+          </button>
+        </form>
 
       </div>
 

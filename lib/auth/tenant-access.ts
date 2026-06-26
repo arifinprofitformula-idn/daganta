@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { PlatformRole } from '@prisma/client';
+import { isRecoverablePrismaConnectionError } from '@/lib/prisma-errors';
 import { getCurrentUserProfile } from './session';
 import { getActiveTenantCookie, clearActiveTenantCookie } from './dashboard-tenant-cookie';
 
@@ -62,20 +63,37 @@ export async function getActiveTenantContext(): Promise<TenantContext> {
   const userProfile = authData.profile;
 
   // 2. Ambil daftar keanggotaan TenantMember milik pengguna dengan saringan field aman
-  const memberships = await prisma.tenantMember.findMany({
-    where: { userId: userProfile.id },
-    include: {
-      tenant: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          subdomain: true,
-          status: true
+  let memberships;
+
+  try {
+    memberships = await prisma.tenantMember.findMany({
+      where: { userId: userProfile.id },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            subdomain: true,
+            status: true
+          }
         }
       }
+    });
+  } catch (error) {
+    if (!isRecoverablePrismaConnectionError(error)) {
+      throw error;
     }
-  });
+
+    return {
+      status: 'NO_MEMBERSHIP',
+      user,
+      userProfile,
+      activeTenant: null,
+      activeMembership: null,
+      availableTenants: null
+    };
+  }
 
   if (memberships.length === 0) {
     return {

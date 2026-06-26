@@ -1,6 +1,5 @@
 import { headers } from 'next/headers';
-import Link from 'next/link';
-import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
+import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
 import { prisma } from '../../lib/prisma';
 import MarketingHome from '../../components/marketing/marketing-home';
 import { CartProvider } from '../../lib/cart/use-cart';
@@ -11,13 +10,13 @@ export default async function CartPage() {
   const host = headersList.get('host') ?? '';
 
   // 1. Resolusi Tenant
-  const result = await resolveTenantFromHost(host);
+  const result = await getStorefrontTenantContext();
 
   if (result.status === 'MARKETING_SITE') {
     return <MarketingHome />;
   }
 
-  if (result.status === 'NOT_FOUND') {
+  if (result.status === 'NOT_FOUND' || result.status === 'RESERVED') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
@@ -45,7 +44,7 @@ export default async function CartPage() {
     );
   }
 
-  if (result.status === 'BLOCKED') {
+  if (result.status === 'BLOCKED' || result.status === 'SUSPENDED') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">

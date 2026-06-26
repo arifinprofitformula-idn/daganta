@@ -1,21 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { assertDemoAuthEnabled, requireAuthSecret } from '@/lib/config/env';
+import { isRecoverablePrismaConnectionError } from '@/lib/prisma-errors';
 import type { AuthProviderAdapter } from './index';
 
 const DEMO_USER_EMAIL = 'owner.toya@daganta.com';
 const DEMO_USER_ID = 'demo:toya-owner';
-
-function isRecoverablePrismaBootstrapError(error: unknown) {
-  const code =
-    typeof error === 'object' && error !== null && 'code' in error
-      ? (error as { code?: string }).code
-      : null;
-
-  return (
-    code === 'P1017' ||
-    code === 'P2021'
-  );
-}
 
 export const demoAuthAdapter: AuthProviderAdapter = {
   async getCurrentUser() {
@@ -45,7 +34,7 @@ export const demoAuthAdapter: AuthProviderAdapter = {
         where: { email: DEMO_USER_EMAIL },
       });
     } catch (error) {
-      if (!isRecoverablePrismaBootstrapError(error)) {
+      if (!isRecoverablePrismaConnectionError(error)) {
         throw error;
       }
     }

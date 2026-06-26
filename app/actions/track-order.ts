@@ -1,8 +1,7 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
-import { resolveTenantFromHost } from '../../lib/tenant/resolve-tenant';
+import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
 import { getTenantSubscriptionPolicy } from '../../lib/billing/lifecycle';
 
 export interface SafeOrderItem {
@@ -98,9 +97,7 @@ export async function trackOrderAction(
     }
 
     // 2. Resolusi Tenant dari domain host aktif
-    const headersList = await headers();
-    const host = headersList.get('host') ?? '';
-    const resolution = await resolveTenantFromHost(host);
+    const resolution = await getStorefrontTenantContext();
 
     if (resolution.status !== 'SUCCESS' || !resolution.tenant) {
       return { success: false, error: 'Toko tidak aktif atau tidak ditemukan.' };
@@ -200,7 +197,7 @@ export async function trackOrderAction(
       success: true,
       order: safeOrder,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Order tracking error:', err);
     return {
       success: false,
