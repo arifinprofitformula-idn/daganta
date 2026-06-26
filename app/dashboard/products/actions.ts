@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
+import { validateTenantAccess } from '@/lib/auth/validate-tenant-access';
+import { logAuditAction } from '@/lib/audit/log-action';
 import { ProductStatus } from '@prisma/client';
 import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 import {
@@ -168,6 +170,10 @@ function parseProductVariants(formData: FormData): ProductVariantInput[] {
   }));
 }
 
+async function ensureTenantWriteAccess(userId: string, tenantId: string) {
+  await validateTenantAccess(userId, tenantId);
+}
+
 async function validateCategoryForTenant(tenantId: string, categoryId?: string) {
   if (!categoryId) {
     return true;
@@ -196,6 +202,7 @@ async function createProductFromFormData(formData: FormData): Promise<MutationRe
   try {
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
+    await ensureTenantWriteAccess(actorId, tenantId);
     const values = parseProductFormData(formData);
     const variants = parseProductVariants(formData);
     const files = getFormFiles(formData);
@@ -286,23 +293,6 @@ async function createProductFromFormData(formData: FormData): Promise<MutationRe
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          tenantId,
-          actorId,
-          action: 'CREATE_PRODUCT',
-          entityType: 'Product',
-          entityId: newProduct.id,
-          metadata: {
-            productName: newProduct.name,
-            basePrice: values.price,
-            comparePrice: values.comparePrice ?? null,
-            uploadedImageCount: files.length,
-            variantCount: normalizedVariants.length,
-          },
-        },
-      });
-
       return newProduct;
     });
 
@@ -323,6 +313,21 @@ async function createProductFromFormData(formData: FormData): Promise<MutationRe
         },
       });
     }
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'CREATE_PRODUCT',
+      entityType: 'Product',
+      entityId: product.id,
+      metadata: {
+        productName: product.name,
+        basePrice: values.price,
+        comparePrice: values.comparePrice ?? null,
+        uploadedImageCount: files.length,
+        variantCount: normalizedVariants.length,
+      },
+    });
 
     revalidatePath('/dashboard/products');
     return { success: true, data: { ...product, imageUrl } };
@@ -349,6 +354,7 @@ export async function createProductAction(input: CreateProductInput | FormData):
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   // 2. Validasi input sisi server
   if (!input.name || input.name.trim().length < 3) {
@@ -479,28 +485,20 @@ export async function createProductAction(input: CreateProductInput | FormData):
         });
       }
 
-      // c. Tulis AuditLog aktivitas
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'CREATE_PRODUCT',
-            entityType: 'Product',
-            entityId: newProduct.id,
-            metadata: {
-              productName: newProduct.name,
-              basePrice: newProduct.basePrice.toString(),
-              sku: input.sku || null,
-            },
-          },
-        });
-      } catch (logError) {
-        // Jangan gagalkan transaksi utama jika log gagal secara teknis
-        console.error('Gagal menulis AuditLog pembuatan produk:', logError);
-      }
-
       return newProduct;
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'CREATE_PRODUCT',
+      entityType: 'Product',
+      entityId: product.id,
+      metadata: {
+        productName: product.name,
+        basePrice: product.basePrice.toString(),
+        sku: input.sku || null,
+      },
     });
 
     revalidatePath('/dashboard/products');
@@ -523,6 +521,7 @@ export async function editProductAction(
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   // 2. Validasi input sisi server
   if (!input.name || input.name.trim().length < 3) {
@@ -586,7 +585,7 @@ export async function editProductAction(
     const product = await prisma.$transaction(async (tx) => {
       // a. Update Product
       const updatedProduct = await tx.product.update({
-        where: { id: productId },
+        where: { id: productId, tenantId },
         data: {
           categoryId: input.categoryId || null,
           name: input.name.trim(),
@@ -620,8 +619,8 @@ export async function editProductAction(
         for (const variant of input.variants) {
           if (variant.id) {
             // Update existing variant
-            await tx.productVariant.update({
-              where: { id: variant.id },
+            await tx.productVariant.updateMany({
+              where: { id: variant.id, tenantId, productId },
               data: {
                 name: variant.name,
                 sku: variant.sku?.trim() || null,
@@ -654,8 +653,8 @@ export async function editProductAction(
         });
 
         if (variantDefault) {
-          await tx.productVariant.update({
-            where: { id: variantDefault.id },
+            await tx.productVariant.updateMany({
+              where: { id: variantDefault.id, tenantId, productId },
             data: {
               sku: input.sku?.trim() || null,
               price: input.basePrice,
@@ -682,8 +681,8 @@ export async function editProductAction(
           });
 
           if (firstVariant) {
-            await tx.productVariant.update({
-              where: { id: firstVariant.id },
+            await tx.productVariant.updateMany({
+              where: { id: firstVariant.id, tenantId, productId },
               data: {
                 sku: input.sku?.trim() || null,
                 price: input.basePrice,
@@ -722,27 +721,20 @@ export async function editProductAction(
         }
       }
 
-      // c. Tulis AuditLog aktivitas
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'UPDATE_PRODUCT',
-            entityType: 'Product',
-            entityId: productId,
-            metadata: {
-              productName: updatedProduct.name,
-              basePrice: updatedProduct.basePrice.toString(),
-              status: updatedProduct.status,
-            },
-          },
-        });
-      } catch (logError) {
-        console.error('Gagal menulis AuditLog pembaruan produk:', logError);
-      }
-
       return updatedProduct;
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'UPDATE_PRODUCT',
+      entityType: 'Product',
+      entityId: productId,
+      metadata: {
+        productName: product.name,
+        basePrice: product.basePrice.toString(),
+        status: product.status,
+      },
     });
 
     revalidatePath('/dashboard/products');
@@ -762,6 +754,7 @@ export async function updateProductAction(productId: string, formData: FormData)
   try {
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
+    await ensureTenantWriteAccess(actorId, tenantId);
     const values = parseProductFormData(formData);
     const variants = parseProductVariants(formData);
     const files = getFormFiles(formData);
@@ -825,22 +818,6 @@ export async function updateProductAction(productId: string, formData: FormData)
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          tenantId,
-          actorId,
-          action: 'UPDATE_PRODUCT',
-          entityType: 'Product',
-          entityId: productId,
-          metadata: {
-            productName: values.name,
-            basePrice: values.price,
-            comparePrice: values.comparePrice ?? null,
-            uploadedImageCount: files.length,
-            variantCount: normalizedVariants.length,
-          },
-        },
-      });
     });
 
     await updateProductVariants(tenantId, productId, normalizedVariants);
@@ -848,6 +825,21 @@ export async function updateProductAction(productId: string, formData: FormData)
     if (files[0] && product.imageUrl) {
       await deleteProductImage(product.imageUrl);
     }
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'UPDATE_PRODUCT',
+      entityType: 'Product',
+      entityId: productId,
+      metadata: {
+        productName: values.name,
+        basePrice: values.price,
+        comparePrice: values.comparePrice ?? null,
+        uploadedImageCount: files.length,
+        variantCount: normalizedVariants.length,
+      },
+    });
 
     revalidatePath('/dashboard/products');
     revalidatePath(`/dashboard/products/${productId}/edit`);
@@ -867,6 +859,7 @@ export async function deactivateProductAction(productId: string): Promise<Mutati
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   // 2. Pastikan produk ada dan milik tenant aktif (isolasi)
   const existingProduct = await prisma.product.findFirst({
@@ -879,8 +872,8 @@ export async function deactivateProductAction(productId: string): Promise<Mutati
   // 3. Eksekusi penonaktifan (status = ARCHIVED)
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.product.update({
-        where: { id: productId },
+      await tx.product.updateMany({
+        where: { id: productId, tenantId },
         data: { status: ProductStatus.ARCHIVED }
       });
 
@@ -890,23 +883,17 @@ export async function deactivateProductAction(productId: string): Promise<Mutati
         data: { isActive: false }
       });
 
-      // Tulis AuditLog
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'DEACTIVATE_PRODUCT',
-            entityType: 'Product',
-            entityId: productId,
-            metadata: {
-              productName: existingProduct.name
-            }
-          },
-        });
-      } catch (logError) {
-        console.error('Gagal menulis AuditLog deaktifasi produk:', logError);
-      }
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'DEACTIVATE_PRODUCT',
+      entityType: 'Product',
+      entityId: productId,
+      metadata: {
+        productName: existingProduct.name,
+      },
     });
 
     revalidatePath('/dashboard/products');
@@ -919,16 +906,42 @@ export async function deactivateProductAction(productId: string): Promise<Mutati
 
 export async function deleteProductAction(productId: string): Promise<MutationResult> {
   const tenantCtx = await getActiveTenantContext();
-  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant || !tenantCtx.userProfile) {
     return { success: false, error: 'Sesi tidak valid atau Anda tidak memiliki akses ke toko ini.' };
   }
 
   try {
-    const result = await deleteProduct(tenantCtx.activeTenant.id, productId);
+    const tenantId = tenantCtx.activeTenant.id;
+    const actorId = tenantCtx.userProfile.id;
+    await ensureTenantWriteAccess(actorId, tenantId);
+
+    const product = await prisma.product.findFirst({
+      where: {
+        id: productId,
+        tenantId,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const result = await deleteProduct(tenantId, productId);
 
     if (result.count === 0) {
       return { success: false, error: 'Produk tidak ditemukan atau bukan milik toko Anda.' };
     }
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'DELETE_PRODUCT',
+      entityType: 'Product',
+      entityId: productId,
+      metadata: {
+        productName: product?.name ?? null,
+      },
+    });
 
     revalidatePath('/dashboard/products');
     return { success: true };
@@ -940,16 +953,31 @@ export async function deleteProductAction(productId: string): Promise<MutationRe
 
 export async function toggleStatusAction(productId: string): Promise<MutationResult> {
   const tenantCtx = await getActiveTenantContext();
-  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant || !tenantCtx.userProfile) {
     return { success: false, error: 'Sesi tidak valid atau Anda tidak memiliki akses ke toko ini.' };
   }
 
   try {
-    const result = await toggleProductStatus(tenantCtx.activeTenant.id, productId);
+    const tenantId = tenantCtx.activeTenant.id;
+    const actorId = tenantCtx.userProfile.id;
+    await ensureTenantWriteAccess(actorId, tenantId);
+
+    const result = await toggleProductStatus(tenantId, productId);
 
     if (result.count === 0) {
       return { success: false, error: 'Produk tidak ditemukan atau bukan milik toko Anda.' };
     }
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'TOGGLE_PRODUCT_STATUS',
+      entityType: 'Product',
+      entityId: productId,
+      metadata: {
+        affectedRows: result.count,
+      },
+    });
 
     revalidatePath('/dashboard/products');
     return { success: true };
@@ -975,6 +1003,7 @@ export async function createCategoryAction(input: {
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   if (!input.name || input.name.trim().length < 3) {
     return { success: false, error: 'Nama kategori wajib diisi dan minimal 3 karakter.' };
@@ -1013,24 +1042,18 @@ export async function createCategoryAction(input: {
         }
       });
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'CREATE_CATEGORY',
-            entityType: 'ProductCategory',
-            entityId: newCategory.id,
-            metadata: {
-              categoryName: newCategory.name
-            }
-          }
-        });
-      } catch (logError) {
-        console.error('Gagal menulis AuditLog pembuatan kategori:', logError);
-      }
-
       return newCategory;
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'CREATE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: category.id,
+      metadata: {
+        categoryName: category.name,
+      },
     });
 
     revalidatePath('/dashboard/products/categories');
@@ -1057,6 +1080,7 @@ export async function editCategoryAction(
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   if (!input.name || input.name.trim().length < 3) {
     return { success: false, error: 'Nama kategori wajib diisi dan minimal 3 karakter.' };
@@ -1095,7 +1119,7 @@ export async function editCategoryAction(
   try {
     const category = await prisma.$transaction(async (tx) => {
       const updatedCategory = await tx.productCategory.update({
-        where: { id: categoryId },
+        where: { id: categoryId, tenantId },
         data: {
           name: input.name.trim(),
           slug: uniqueSlug,
@@ -1104,24 +1128,18 @@ export async function editCategoryAction(
         }
       });
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'UPDATE_CATEGORY',
-            entityType: 'ProductCategory',
-            entityId: categoryId,
-            metadata: {
-              categoryName: updatedCategory.name
-            }
-          }
-        });
-      } catch (logError) {
-        console.error('Gagal menulis AuditLog pembaruan kategori:', logError);
-      }
-
       return updatedCategory;
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'UPDATE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: categoryId,
+      metadata: {
+        categoryName: category.name,
+      },
     });
 
     revalidatePath('/dashboard/products/categories');
@@ -1141,6 +1159,7 @@ export async function deactivateCategoryAction(categoryId: string): Promise<Muta
 
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
+  await ensureTenantWriteAccess(actorId, tenantId);
 
   // Pastikan kategori milik tenant
   const existingCategory = await prisma.productCategory.findFirst({
@@ -1153,26 +1172,21 @@ export async function deactivateCategoryAction(categoryId: string): Promise<Muta
   try {
     await prisma.$transaction(async (tx) => {
       await tx.productCategory.update({
-        where: { id: categoryId },
+        where: { id: categoryId, tenantId },
         data: { isActive: false }
       });
 
-      try {
-        await tx.auditLog.create({
-          data: {
-            tenantId,
-            actorId,
-            action: 'DEACTIVATE_CATEGORY',
-            entityType: 'ProductCategory',
-            entityId: categoryId,
-            metadata: {
-              categoryName: existingCategory.name
-            }
-          }
-        });
-      } catch (logError) {
-        console.error('Gagal menulis AuditLog deaktifasi kategori:', logError);
-      }
+    });
+
+    await logAuditAction({
+      tenantId,
+      userId: actorId,
+      action: 'DEACTIVATE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: categoryId,
+      metadata: {
+        categoryName: existingCategory.name,
+      },
     });
 
     revalidatePath('/dashboard/products/categories');

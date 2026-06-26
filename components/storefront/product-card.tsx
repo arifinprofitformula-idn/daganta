@@ -60,7 +60,7 @@ export default function ProductCard({
       style={{ '--primary': primaryColor, '--primary-hover': hoverColor } as React.CSSProperties}
     >
       {/* Product Image (Rasio 4:5 Premium Dominan) */}
-      <Link href={`/p/${product.slug}`} className="relative aspect-[4/5] w-full bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 block cursor-pointer">
+      <Link href={`/products/${product.slug}`} className="relative aspect-[4/5] w-full bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 block cursor-pointer">
         {product.imageUrl ? (
           <img 
             src={product.imageUrl} 
@@ -90,7 +90,7 @@ export default function ProductCard({
       {/* Product Content */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
         <div className="space-y-1.5">
-          <Link href={`/p/${product.slug}`} className="block">
+          <Link href={`/products/${product.slug}`} className="block">
             <h3 
               className="font-bold text-slate-800 transition-colors text-sm line-clamp-2 leading-snug group-hover:underline"
               style={{ '--hover-color': primaryColor } as React.CSSProperties}
@@ -131,7 +131,7 @@ export default function ProductCard({
 
           {/* Action CTA Button */}
           <Link 
-            href={`/p/${product.slug}`}
+            href={`/products/${product.slug}`}
             className="w-full py-2.5 px-4 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border transition-all text-white shadow-md shadow-slate-100 hover:shadow-lg bg-[var(--primary)] border-[var(--primary)] hover:bg-[var(--primary-hover)] hover:border-[var(--primary-hover)]"
           >
             <span>Lihat Detail</span>

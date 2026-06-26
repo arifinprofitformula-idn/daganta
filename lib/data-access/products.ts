@@ -43,6 +43,26 @@ export interface ProductVariantInput {
   stock: number;
 }
 
+export type StorefrontProduct = Prisma.ProductGetPayload<{
+  include: {
+    category: {
+      select: {
+        id: true;
+        name: true;
+        slug: true;
+      };
+    };
+    variants: {
+      where: {
+        isActive: true;
+      };
+      orderBy: {
+        createdAt: 'asc';
+      };
+    };
+  };
+}>;
+
 /**
  * Returns active storefront products for one tenant only.
  * Every product query in this function must include the provided tenantId.
@@ -64,6 +84,144 @@ export async function getProductsByTenantId(tenantId: string) {
     },
     orderBy: { createdAt: 'desc' },
   });
+}
+
+/**
+ * Returns active storefront products with a tenantId filter.
+ * Every product query in this function must include the provided tenantId.
+ */
+export async function getStorefrontProductsByTenant(
+  tenantId: string,
+  options: { limit?: number; featuredOnly?: boolean } = {}
+): Promise<StorefrontProduct[]> {
+  if (!tenantId) {
+    throw new Error('tenantId is required for tenant-scoped storefront product queries');
+  }
+
+  return prisma.product.findMany({
+    where: {
+      tenantId,
+      status: ProductStatus.ACTIVE,
+      ...(options.featuredOnly ? { isFeatured: true } : {}),
+    },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+      variants: {
+        where: {
+          isActive: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    ...(options.limit ? { take: options.limit } : {}),
+  });
+}
+
+/**
+ * Returns one active storefront product by tenant-scoped slug.
+ * The lookup must include both tenantId and slug.
+ */
+export async function getStorefrontProductBySlug(
+  tenantId: string,
+  slug: string
+): Promise<StorefrontProduct | null> {
+  if (!tenantId || !slug) {
+    throw new Error('tenantId and slug are required for tenant-scoped storefront product queries');
+  }
+
+  return prisma.product.findFirst({
+    where: {
+      tenantId,
+      slug,
+      status: ProductStatus.ACTIVE,
+    },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+      variants: {
+        where: {
+          isActive: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Returns the storefront WhatsApp number for one tenant.
+ * Tenant lookup is constrained by tenant id, and address fallback must include tenantId.
+ */
+export async function getTenantStorefrontWhatsappNumber(tenantId: string): Promise<string | null> {
+  if (!tenantId) {
+    throw new Error('tenantId is required for tenant-scoped tenant contact queries');
+  }
+
+  let tenantWhatsappNumber: string | null = null;
+
+  try {
+    const tenants = await prisma.$queryRaw<Array<{ whatsappNumber: string | null }>>`
+      SELECT "whatsappNumber"
+      FROM "Tenant"
+      WHERE "id" = ${tenantId}
+      LIMIT 1
+    `;
+    tenantWhatsappNumber = tenants[0]?.whatsappNumber?.trim() || null;
+  } catch (error: unknown) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        'Tenant.whatsappNumber is not available yet. Apply docs/sql/add_tenant_whatsapp_number.sql to enable it.',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+  }
+
+  if (tenantWhatsappNumber) {
+    return tenantWhatsappNumber;
+  }
+
+  const defaultAddress = await prisma.address.findFirst({
+    where: {
+      tenantId,
+      isDefault: true,
+    },
+    select: {
+      phone: true,
+    },
+  });
+
+  if (defaultAddress?.phone) {
+    return defaultAddress.phone;
+  }
+
+  const fallbackAddress = await prisma.address.findFirst({
+    where: {
+      tenantId,
+    },
+    select: {
+      phone: true,
+    },
+  });
+
+  return fallbackAddress?.phone ?? null;
 }
 
 /**

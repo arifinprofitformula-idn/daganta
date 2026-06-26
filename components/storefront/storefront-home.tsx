@@ -397,7 +397,7 @@ export default function StorefrontHome({
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Link 
-                    href={`/p/${featuredProduct.slug}`}
+                    href={`/products/${featuredProduct.slug}`}
                     className="px-6 py-3.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-extrabold rounded-xl transition-all shadow-md text-center flex items-center justify-center gap-1.5"
                   >
                     <span>Lihat Spesifikasi Lengkap</span>
@@ -470,7 +470,7 @@ export default function StorefrontHome({
 
                 <div className="flex gap-4">
                   <Link 
-                    href={`/p/${bestSellerProduct.slug}`}
+                    href={`/products/${bestSellerProduct.slug}`}
                     className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-md"
                   >
                     Pesan Sekarang
@@ -495,8 +495,16 @@ export default function StorefrontHome({
               </p>
             </div>
 
-            {/* Bilah Pencarian Ritel Premium */}
-            <div className="relative max-w-sm w-full mx-auto lg:mx-0">
+            <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row lg:justify-end">
+              <Link
+                href="/products"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-black text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                Lihat Semua Produk
+              </Link>
+
+              {/* Bilah Pencarian Ritel Premium */}
+              <div className="relative w-full max-w-sm mx-auto lg:mx-0">
               <input 
                 type="text" 
                 value={searchQuery}
@@ -515,6 +523,7 @@ export default function StorefrontHome({
                   Batal
                 </button>
               )}
+              </div>
             </div>
           </div>
 

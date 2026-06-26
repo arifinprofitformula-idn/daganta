@@ -151,7 +151,7 @@ export default function CartClient({ tenant, tenantWhatsapp, isReadOnly = false 
                         <div className="space-y-1">
                           <div className="flex items-start justify-between gap-2">
                             <Link 
-                              href={`/p/${item.slug}`} 
+                              href={`/products/${item.slug}`} 
                               className="text-sm font-black text-slate-800 hover:text-[var(--primary)] transition-colors leading-tight"
                             >
                               {item.name}

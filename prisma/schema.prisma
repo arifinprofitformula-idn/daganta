@@ -153,6 +153,7 @@ model Tenant {
   slug               String       @unique
   subdomain          String       @unique
   status             TenantStatus @default(ACTIVE)
+  whatsappNumber     String?
   ownerId            String
   trialEndsAt        DateTime?
   subscriptionEndsAt DateTime?

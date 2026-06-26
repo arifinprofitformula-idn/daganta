@@ -1,7 +1,9 @@
 import { headers } from 'next/headers';
 import { getStorefrontTenantContext } from '../lib/tenant/storefront-tenant';
-import { getProductsByTenantId } from '../lib/data-access/products';
-import { prisma } from '../lib/prisma';
+import {
+  getStorefrontProductsByTenant,
+  getTenantStorefrontWhatsappNumber,
+} from '../lib/data-access/products';
 import MarketingHome from '../components/marketing/marketing-home';
 import StorefrontHome from '../components/storefront/storefront-home';
 import { CartProvider } from '../lib/cart/use-cart';
@@ -74,27 +76,9 @@ export default async function Page() {
   
   // Successful resolution (SUCCESS)
   const tenant = result.tenant!;
-  const products = await getProductsByTenantId(tenant.id);
+  const products = await getStorefrontProductsByTenant(tenant.id, { limit: 6 });
   const isReadOnly = result.accessMode === 'STOREFRONT_READONLY';
-
-  // Hubungkan nomor WhatsApp dari database alamat default tenant
-  const address = await prisma.address.findFirst({
-    where: {
-      tenantId: tenant.id,
-      isDefault: true,
-    },
-  });
-
-  // Ambil no telp, jika tidak ada cari alamat mana saja milik tenant
-  let tenantPhone = address?.phone || null;
-  if (!tenantPhone) {
-    const anyAddress = await prisma.address.findFirst({
-      where: {
-        tenantId: tenant.id,
-      },
-    });
-    tenantPhone = anyAddress?.phone || null;
-  }
+  const tenantPhone = await getTenantStorefrontWhatsappNumber(tenant.id);
 
   // Bersihkan data (Decimal -> number) untuk mencegah Next.js Serialization error di Client Component
   const serializedProducts = products.map((p) => ({

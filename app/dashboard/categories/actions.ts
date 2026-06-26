@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
+import { validateTenantAccess } from '@/lib/auth/validate-tenant-access';
+import { logAuditAction } from '@/lib/audit/log-action';
 import { createCategory, deleteCategory, updateCategory } from '@/lib/data-access/categories';
 
 const CategorySchema = z.object({
@@ -24,22 +26,39 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Kategori gagal diproses.';
 }
 
-async function getTenantId() {
+async function getTenantWriteContext() {
   const tenantCtx = await getActiveTenantContext();
 
-  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant) {
+  if (tenantCtx.status !== 'SUCCESS' || !tenantCtx.activeTenant || !tenantCtx.userProfile) {
     throw new Error('Sesi tidak valid atau Anda tidak memiliki akses ke toko ini.');
   }
 
-  return tenantCtx.activeTenant.id;
+  await validateTenantAccess(tenantCtx.userProfile.id, tenantCtx.activeTenant.id);
+
+  return {
+    tenantId: tenantCtx.activeTenant.id,
+    userId: tenantCtx.userProfile.id,
+  };
 }
 
 export async function createCategoryAction(input: unknown): Promise<CategoryMutationResult> {
   try {
-    const tenantId = await getTenantId();
+    const { tenantId, userId } = await getTenantWriteContext();
     const data = CategorySchema.parse(input);
 
-    await createCategory(tenantId, data);
+    const category = await createCategory(tenantId, data);
+    await logAuditAction({
+      tenantId,
+      userId,
+      action: 'CREATE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: category.id,
+      metadata: {
+        categoryName: category.name,
+        slug: category.slug,
+      },
+    });
+
     revalidatePath('/dashboard/categories');
     revalidatePath('/dashboard/products');
 
@@ -54,13 +73,26 @@ export async function updateCategoryAction(
   input: unknown
 ): Promise<CategoryMutationResult> {
   try {
-    const tenantId = await getTenantId();
+    const { tenantId, userId } = await getTenantWriteContext();
     const data = CategorySchema.parse(input);
     const result = await updateCategory(tenantId, categoryId, data);
 
     if (result.count === 0) {
       return { success: false, error: 'Kategori tidak ditemukan atau bukan milik toko Anda.' };
     }
+
+    await logAuditAction({
+      tenantId,
+      userId,
+      action: 'UPDATE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: categoryId,
+      metadata: {
+        categoryName: data.name,
+        slug: data.slug,
+        affectedRows: result.count,
+      },
+    });
 
     revalidatePath('/dashboard/categories');
     revalidatePath('/dashboard/products');
@@ -73,12 +105,23 @@ export async function updateCategoryAction(
 
 export async function deleteCategoryAction(categoryId: string): Promise<CategoryMutationResult> {
   try {
-    const tenantId = await getTenantId();
+    const { tenantId, userId } = await getTenantWriteContext();
     const result = await deleteCategory(tenantId, categoryId);
 
     if (result.count === 0) {
       return { success: false, error: 'Kategori tidak ditemukan atau bukan milik toko Anda.' };
     }
+
+    await logAuditAction({
+      tenantId,
+      userId,
+      action: 'DELETE_CATEGORY',
+      entityType: 'ProductCategory',
+      entityId: categoryId,
+      metadata: {
+        affectedRows: result.count,
+      },
+    });
 
     revalidatePath('/dashboard/categories');
     revalidatePath('/dashboard/products');
