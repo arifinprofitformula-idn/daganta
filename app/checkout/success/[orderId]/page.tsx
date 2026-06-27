@@ -173,7 +173,9 @@ export default async function SuccessPage({ params }: PageProps) {
               </svg>
             </div>
             <div className="space-y-1">
-              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Pesanan Berhasil Dibuat!</h1>
+              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+                Pesanan #{order.orderNumber} berhasil dibuat!
+              </h1>
               <p className="text-xs text-slate-500 font-medium">Terima kasih atas pesanan Anda di {tenant.name}.</p>
             </div>
           </div>
@@ -240,11 +242,11 @@ export default async function SuccessPage({ params }: PageProps) {
           <div className="pt-4 border-t border-slate-100 space-y-6">
             <div className="p-5 bg-amber-50 border border-amber-200/50 rounded-2xl space-y-2 text-xs font-medium leading-relaxed shadow-inner">
               <h4 className="font-black uppercase tracking-wider text-amber-800 text-[10px] flex items-center gap-1.5">
-                <span>⚠️ Instruksi Pembayaran Manual</span>
+                <span>Instruksi Pembayaran Manual</span>
               </h4>
               {order.payment ? (
                 <p className="text-amber-850">
-                  Instruksi pembayaran manual akan dikonfirmasi oleh admin toko melalui WhatsApp.
+                  Silakan transfer ke rekening toko. Nomor rekening akan dikonfirmasi oleh admin {tenant.name} melalui WhatsApp.
                 </p>
               ) : (
                 <p className="text-amber-850">
@@ -276,10 +278,10 @@ export default async function SuccessPage({ params }: PageProps) {
             {/* Order Tracking CTA */}
             <div className="space-y-3 pt-2">
               <Link
-                href={`/track?order=${order.orderNumber}`}
+                href={`/orders/${order.id}?phone=${encodeURIComponent(order.customer?.phone ?? '')}`}
                 className="w-full py-4 px-6 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-md text-center hover:scale-[1.01] block"
               >
-                Cek Status Pesanan
+                Lacak Pesanan
               </Link>
             </div>
           </div>

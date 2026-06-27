@@ -5,6 +5,16 @@ import { emailAdapter } from './adapters/email';
 import { internalAdapter } from './adapters/internal';
 import { AdapterSendResult } from './types';
 
+function hasDryRunFlag(payload: unknown) {
+  return (
+    !!payload &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    'dryRun' in payload &&
+    (payload as { dryRun?: unknown }).dryRun === true
+  );
+}
+
 export async function processPendingNotifications() {
   // Fetch up to 10 PENDING events due for processing
   const pendingEvents = await prisma.notificationEvent.findMany({
@@ -19,7 +29,7 @@ export async function processPendingNotifications() {
   const results = [];
 
   for (const event of pendingEvents) {
-    const isDryRun = event.payload && typeof event.payload === 'object' && (event.payload as any).dryRun === true;
+    const isDryRun = hasDryRunFlag(event.payload);
 
     // Console logging safety check: Log only safe metadata
     console.log(
@@ -74,8 +84,9 @@ export async function processPendingNotifications() {
         });
         results.push({ id: event.id, success: false });
       }
-    } catch (error: any) {
-      console.error(`[WORKER] Failed to process event ${event.id}:`, error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Worker exception occurred';
+      console.error(`[WORKER] Failed to process event ${event.id}:`, errorMessage);
       
       const newAttemptCount = event.attemptCount + 1;
       const isFailed = newAttemptCount >= 3;
@@ -86,10 +97,10 @@ export async function processPendingNotifications() {
           status: isFailed ? NotificationEventStatus.FAILED : NotificationEventStatus.PENDING,
           attemptCount: newAttemptCount,
           failedAt: isFailed ? new Date() : null,
-          lastError: error.message || 'Worker exception occurred',
+          lastError: errorMessage,
         },
       });
-      results.push({ id: event.id, success: false, error: error.message });
+      results.push({ id: event.id, success: false, error: errorMessage });
     }
   }
 

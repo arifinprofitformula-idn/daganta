@@ -71,7 +71,11 @@ export async function middleware(request: NextRequest) {
       return new NextResponse('Toko tidak ditemukan', { status: 404 });
     }
 
-    if (tenantResolution.status === 'SUSPENDED' || tenantResolution.suspended) {
+    if (
+      tenantResolution.status === 'SUSPENDED' ||
+      tenantResolution.status === 'BLOCKED' ||
+      tenantResolution.suspended
+    ) {
       return NextResponse.redirect(new URL('/toko-tidak-aktif', request.url));
     }
 

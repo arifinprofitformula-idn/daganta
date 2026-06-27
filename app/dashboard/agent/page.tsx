@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
-  Briefcase,
   DollarSign,
   Users,
   FileText,
@@ -14,8 +13,6 @@ import {
   Percent,
   AlertCircle,
   CheckCircle,
-  Copy,
-  ExternalLink,
   Store
 } from 'lucide-react';
 import { getCurrentUserProfile } from '@/lib/auth/session';

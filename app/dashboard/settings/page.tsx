@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Save, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 

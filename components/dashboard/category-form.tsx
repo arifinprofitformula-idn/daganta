@@ -1,11 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import { Save, Loader2, Plus, Sparkles, X, FolderOpen } from 'lucide-react';
+import { Save, Loader2, Plus, X, FolderOpen } from 'lucide-react';
 import { createCategoryAction, editCategoryAction } from '@/app/dashboard/products/actions';
 
+export interface DashboardCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 interface CategoryFormProps {
-  editingCategory?: any; // null or category object
+  editingCategory?: DashboardCategory | null;
   onSuccess: () => void;
   onCancel?: () => void;
 }

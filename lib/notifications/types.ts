@@ -1,4 +1,6 @@
-import { NotificationChannel, NotificationEventType } from '@prisma/client';
+import { NotificationChannel, NotificationEventType, Prisma } from '@prisma/client';
+
+export type NotificationPayloadData = Prisma.InputJsonValue;
 
 export interface NotificationPayload {
   tenantId: string;
@@ -9,7 +11,7 @@ export interface NotificationPayload {
   recipient: string | null;
   subject?: string | null;
   message: string;
-  payload?: any;
+  payload?: NotificationPayloadData;
 }
 
 export interface AdapterSendResult {

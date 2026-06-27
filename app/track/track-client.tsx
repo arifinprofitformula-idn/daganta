@@ -5,13 +5,10 @@ import Link from 'next/link';
 import { 
   Search, 
   ArrowLeft, 
-  CheckCircle2, 
-  Package, 
   CreditCard, 
   AlertCircle, 
   ShieldCheck,
-  Truck,
-  ExternalLink
+  Truck
 } from 'lucide-react';
 import { getTenantThemeConfig, TenantThemeConfig } from '../../lib/tenant/theme-config';
 import { trackOrderAction, SafeOrderResult } from '../actions/track-order';
@@ -68,7 +65,7 @@ export default function TrackClient({ tenant, initialOrderNumber = '' }: TrackCl
       } else {
         setError(result.error || 'Pesanan tidak ditemukan. Pastikan nomor pesanan dan kontak yang Anda masukkan sudah sesuai.');
       }
-    } catch (err) {
+    } catch {
       setError('Terjadi kesalahan tidak terduga. Silakan coba kembali.');
     } finally {
       setIsSubmitting(false);

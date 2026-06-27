@@ -1,7 +1,7 @@
 import { TenantStatus } from '@prisma/client';
 import { prisma } from '../prisma';
 import { TenantResolveResult } from './types';
-import { getTenantSubscriptionPolicy } from '../billing/lifecycle';
+import { getTenantRestrictions } from './lifecycle';
 
 const RESERVED_SUBDOMAINS = new Set(['app', 'api', 'admin']);
 const TENANT_RESOLVE_CACHE_TTL_MS = 60_000;
@@ -184,16 +184,16 @@ export async function resolveTenantFromHost(hostname: string): Promise<TenantRes
       return result;
     }
 
-    // 5. Map computed Subscription Policy to TenantAccessMode
-    const policy = await getTenantSubscriptionPolicy(tenant.id);
+    // 5. Map persisted tenant lifecycle status to storefront access mode.
+    const restrictions = getTenantRestrictions(tenant.status);
     
     let accessMode: TenantResolveResult['accessMode'];
     let status: TenantResolveResult['status'] = 'SUCCESS';
 
-    if (!policy.canViewStorefront) {
+    if (!restrictions.storefrontActive) {
       accessMode = 'BLOCKED';
       status = 'BLOCKED';
-    } else if (!policy.canCheckout) {
+    } else if (!restrictions.canReceiveOrders) {
       accessMode = 'STOREFRONT_READONLY';
     } else {
       accessMode = 'STOREFRONT_FULL';

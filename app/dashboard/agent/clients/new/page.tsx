@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AlertCircle, ArrowLeft, Briefcase, Plus, Store } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Plus, Store } from 'lucide-react';
 import { AgentStatus } from '@prisma/client';
 import { getCurrentUserProfile } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';

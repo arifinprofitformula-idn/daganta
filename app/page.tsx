@@ -4,6 +4,7 @@ import {
   getStorefrontProductsByTenant,
   getTenantStorefrontWhatsappNumber,
 } from '../lib/data-access/products';
+import { getEnrichedCart } from '../lib/cart/cart';
 import MarketingHome from '../components/marketing/marketing-home';
 import StorefrontHome from '../components/storefront/storefront-home';
 import { CartProvider } from '../lib/cart/use-cart';
@@ -76,7 +77,10 @@ export default async function Page() {
   
   // Successful resolution (SUCCESS)
   const tenant = result.tenant!;
-  const products = await getStorefrontProductsByTenant(tenant.id, { limit: 6 });
+  const [products, cart] = await Promise.all([
+    getStorefrontProductsByTenant(tenant.id, { limit: 6 }),
+    getEnrichedCart(tenant.id),
+  ]);
   const isReadOnly = result.accessMode === 'STOREFRONT_READONLY';
   const tenantPhone = await getTenantStorefrontWhatsappNumber(tenant.id);
 
@@ -104,6 +108,7 @@ export default async function Page() {
         products={serializedProducts} 
         isReadOnly={isReadOnly} 
         tenantWhatsapp={tenantPhone}
+        cart={cart}
       />
     </CartProvider>
   );

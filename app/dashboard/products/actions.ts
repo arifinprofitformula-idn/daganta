@@ -8,6 +8,7 @@ import { validateTenantAccess } from '@/lib/auth/validate-tenant-access';
 import { logAuditAction } from '@/lib/audit/log-action';
 import { ProductStatus } from '@prisma/client';
 import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
+import { getTenantRestrictions } from '@/lib/tenant/lifecycle';
 import {
   createProductVariants,
   deleteProduct,
@@ -174,6 +175,48 @@ async function ensureTenantWriteAccess(userId: string, tenantId: string) {
   await validateTenantAccess(userId, tenantId);
 }
 
+async function ensureTenantCanAddProducts(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: {
+      id: tenantId,
+    },
+    select: {
+      status: true,
+    },
+  });
+
+  if (!tenant) {
+    throw new Error('Toko tidak ditemukan.');
+  }
+
+  const restrictions = getTenantRestrictions(tenant.status);
+
+  if (!restrictions.canAddProducts) {
+    throw new Error('Paket Anda tidak aktif. Perpanjang untuk melanjutkan.');
+  }
+}
+
+async function ensureTenantCanEditProducts(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({
+    where: {
+      id: tenantId,
+    },
+    select: {
+      status: true,
+    },
+  });
+
+  if (!tenant) {
+    throw new Error('Toko tidak ditemukan.');
+  }
+
+  const restrictions = getTenantRestrictions(tenant.status);
+
+  if (!restrictions.canEditProducts) {
+    throw new Error('Paket Anda tidak aktif. Perpanjang untuk melanjutkan.');
+  }
+}
+
 async function validateCategoryForTenant(tenantId: string, categoryId?: string) {
   if (!categoryId) {
     return true;
@@ -203,6 +246,7 @@ async function createProductFromFormData(formData: FormData): Promise<MutationRe
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
     await ensureTenantWriteAccess(actorId, tenantId);
+    await ensureTenantCanAddProducts(tenantId);
     const values = parseProductFormData(formData);
     const variants = parseProductVariants(formData);
     const files = getFormFiles(formData);
@@ -355,6 +399,7 @@ export async function createProductAction(input: CreateProductInput | FormData):
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
   await ensureTenantWriteAccess(actorId, tenantId);
+  await ensureTenantCanAddProducts(tenantId);
 
   // 2. Validasi input sisi server
   if (!input.name || input.name.trim().length < 3) {
@@ -522,6 +567,7 @@ export async function editProductAction(
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
   await ensureTenantWriteAccess(actorId, tenantId);
+  await ensureTenantCanEditProducts(tenantId);
 
   // 2. Validasi input sisi server
   if (!input.name || input.name.trim().length < 3) {
@@ -755,6 +801,7 @@ export async function updateProductAction(productId: string, formData: FormData)
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
     await ensureTenantWriteAccess(actorId, tenantId);
+    await ensureTenantCanEditProducts(tenantId);
     const values = parseProductFormData(formData);
     const variants = parseProductVariants(formData);
     const files = getFormFiles(formData);
@@ -860,6 +907,7 @@ export async function deactivateProductAction(productId: string): Promise<Mutati
   const tenantId = tenantCtx.activeTenant.id;
   const actorId = tenantCtx.userProfile.id;
   await ensureTenantWriteAccess(actorId, tenantId);
+  await ensureTenantCanEditProducts(tenantId);
 
   // 2. Pastikan produk ada dan milik tenant aktif (isolasi)
   const existingProduct = await prisma.product.findFirst({
@@ -914,6 +962,7 @@ export async function deleteProductAction(productId: string): Promise<MutationRe
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
     await ensureTenantWriteAccess(actorId, tenantId);
+    await ensureTenantCanEditProducts(tenantId);
 
     const product = await prisma.product.findFirst({
       where: {
@@ -961,6 +1010,7 @@ export async function toggleStatusAction(productId: string): Promise<MutationRes
     const tenantId = tenantCtx.activeTenant.id;
     const actorId = tenantCtx.userProfile.id;
     await ensureTenantWriteAccess(actorId, tenantId);
+    await ensureTenantCanEditProducts(tenantId);
 
     const result = await toggleProductStatus(tenantId, productId);
 

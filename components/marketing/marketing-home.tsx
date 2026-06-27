@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   Store,
-  Smartphone,
   MessageSquare,
   Users,
   TrendingUp,
@@ -24,10 +23,8 @@ import {
   ShoppingBag,
   DollarSign,
   ArrowUpRight,
-  HeartHandshake,
   CheckCircle2,
   XCircle,
-  HelpCircle,
   Database
 } from 'lucide-react';
 

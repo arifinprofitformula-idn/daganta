@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart, CartItem } from '../../lib/cart/use-cart';
@@ -17,7 +18,7 @@ interface CartClientProps {
   isReadOnly?: boolean;
 }
 
-export default function CartClient({ tenant, tenantWhatsapp, isReadOnly = false }: CartClientProps) {
+export default function CartClient({ tenant, isReadOnly = false }: CartClientProps) {
   const theme: TenantThemeConfig = getTenantThemeConfig(tenant.slug);
   const router = useRouter();
   const { cartItems, updateQuantity, removeFromCart, subtotal, totalWeight, isHydrated } = useCart();
@@ -134,10 +135,13 @@ export default function CartClient({ tenant, tenantWhatsapp, isReadOnly = false 
                       {/* Product Thumbnail */}
                       <div className="relative w-20 h-20 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
                         {item.imageUrl ? (
-                          <img 
-                            src={item.imageUrl} 
+                          <Image
+                            src={item.imageUrl}
                             alt={item.name}
-                            className="object-cover w-full h-full"
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <svg className="w-8 h-8 text-slate-300 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}>

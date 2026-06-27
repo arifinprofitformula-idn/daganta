@@ -5,6 +5,7 @@ import { getCategoriesByTenantId, getProductsByTenant } from '@/lib/data-access/
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProductTable } from '@/components/dashboard/products/ProductTable';
+import { getTenantRestrictions } from '@/lib/tenant/lifecycle';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   }
 
   const tenantId = tenantCtx.activeTenant.id;
+  const restrictions = getTenantRestrictions(tenantCtx.activeTenant.status);
   const [productsResult, categories] = await Promise.all([
     getProductsByTenant(tenantId, {
       search: params.search,
@@ -57,12 +59,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               Kategori
             </Link>
           </Button>
-          <Button asChild>
-            <Link href="/dashboard/products/new">
+          {restrictions.canAddProducts ? (
+            <Button asChild>
+              <Link href="/dashboard/products/new">
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                Tambah Produk
+              </Link>
+            </Button>
+          ) : (
+            <Button disabled title="Paket Anda tidak aktif. Perpanjang untuk melanjutkan.">
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               Tambah Produk
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
       </div>
 

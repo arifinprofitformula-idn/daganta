@@ -162,7 +162,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
         });
 
         // Create TenantMember as OWNER
-        const tenantMember = await tx.tenantMember.create({
+        await tx.tenantMember.create({
           data: {
             tenantId: tenant.id,
             userId: userProfile.id,
@@ -171,7 +171,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
         });
 
         // Create Trial TenantSubscription
-        const tenantSubscription = await tx.tenantSubscription.create({
+        await tx.tenantSubscription.create({
           data: {
             tenantId: tenant.id,
             planId: plan.id,
@@ -217,7 +217,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
         success: true,
         sessionCreated,
       };
-    } catch (dbErr: any) {
+    } catch (dbErr: unknown) {
       console.error('Database transaction failed during signup:', dbErr);
       
       // TODO: Implement provider-specific orphan cleanup for external auth users in a future phase.
@@ -227,7 +227,7 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
         error: 'Terjadi kesalahan sistem saat menyimpan data toko Anda. Silakan hubungi admin Daganta.',
       };
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Tenant signup general error:', err);
     return {
       success: false,

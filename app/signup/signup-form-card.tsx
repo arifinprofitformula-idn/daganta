@@ -74,7 +74,7 @@ export default function SignupFormCard({ initialPlanSlug }: SignupFormCardProps)
       } else {
         setErrorMsg(res.error || 'Terjadi kesalahan tidak terduga.');
       }
-    } catch (err) {
+    } catch {
       setErrorMsg('Gagal menghubungkan ke server. Silakan coba beberapa saat lagi.');
     }
   };

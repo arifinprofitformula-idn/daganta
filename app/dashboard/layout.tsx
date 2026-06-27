@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation';
 import { PlatformRole } from '@prisma/client';
 import { getActiveTenantContext } from '@/lib/auth/tenant-access';
 import AccountAccessState from '@/components/dashboard/account-access-state';
-import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 import { prisma } from '@/lib/prisma';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { DashboardTopbar } from '@/components/dashboard/DashboardTopbar';
+import { TenantStatusBanner } from '@/components/dashboard/TenantStatusBanner';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -86,38 +86,11 @@ export default async function Layout({
       : tenantCtx.userProfile?.name || null;
   const sessionUserEmail = sessionUser.email || tenantCtx.user.email || '';
 
-  // 6. Query dynamic subscription policy and build warning banner
-  let warningBanner = null;
   const demoBanner = tenantCtx.user?.isDemo ? (
     <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-xs font-bold leading-relaxed text-amber-900 shadow-sm">
       Mode demo internal aktif. Sesi ini hanya untuk staging atau QA dan bukan autentikasi production.
     </div>
   ) : null;
-
-  if (tenantCtx.activeTenant) {
-    const policy = await getTenantSubscriptionPolicy(tenantCtx.activeTenant.id);
-    if (policy.shouldShowWarning && policy.warningTitle && policy.warningMessage) {
-      const isDanger = ['LIMITED_MODE', 'SUSPENDED', 'CANCELED'].includes(policy.effectiveStatus);
-      const bgClass = isDanger ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-amber-50 border-amber-200 text-amber-800';
-      const textTitleClass = isDanger ? 'text-rose-900 font-extrabold' : 'text-amber-900 font-extrabold';
-      const buttonBgClass = isDanger ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20' : 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/20';
-
-      warningBanner = (
-        <div className={`flex flex-col gap-4 rounded-3xl border p-5 sm:flex-row sm:items-center sm:justify-between ${bgClass} transition-all duration-300 shadow-sm mb-6`}>
-          <div className="space-y-1">
-            <h4 className={`text-sm ${textTitleClass}`}>{policy.warningTitle}</h4>
-            <p className="text-xs leading-relaxed opacity-90 font-medium">{policy.warningMessage}</p>
-          </div>
-          <a
-            href="/dashboard/billing"
-            className={`inline-block rounded-2xl px-5 py-2.5 text-center text-xs font-extrabold transition-all ${buttonBgClass} shrink-0`}
-          >
-            Perpanjang Paket
-          </a>
-        </div>
-      );
-    }
-  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-950">
@@ -134,7 +107,7 @@ export default async function Layout({
         <main className="flex-1 p-4 md:p-8">
           <div className="mx-auto w-full max-w-7xl space-y-6">
             {demoBanner}
-            {warningBanner}
+            {tenantCtx.activeTenant ? <TenantStatusBanner tenantId={tenantCtx.activeTenant.id} /> : null}
             {children}
           </div>
         </main>

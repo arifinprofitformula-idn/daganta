@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import ProductCard from '../../../../components/storefront/product-card';
+import CartButton from '../../../../components/storefront/CartButton';
 import ProductGallery from '../../../../components/storefront/ProductGallery';
 import ProductVariantSelector from '../../../../components/storefront/ProductVariantSelector';
 import {
@@ -10,6 +11,7 @@ import {
   getTenantStorefrontWhatsappNumber,
 } from '../../../../lib/data-access/products';
 import { getStorefrontTenantContext } from '../../../../lib/tenant/storefront-tenant';
+import { getEnrichedCart } from '../../../../lib/cart/cart';
 
 interface PageProps {
   params: Promise<{
@@ -58,9 +60,10 @@ export default async function StorefrontProductDetailPage({ params }: PageProps)
     notFound();
   }
 
-  const [relatedProducts, whatsappNumber] = await Promise.all([
+  const [relatedProducts, whatsappNumber, cart] = await Promise.all([
     getStorefrontProductsByTenant(tenant.id, { limit: 4 }),
     getTenantStorefrontWhatsappNumber(tenant.id),
+    getEnrichedCart(tenant.id),
   ]);
 
   const variants = product.variants.map((variant) => ({
@@ -101,6 +104,7 @@ export default async function StorefrontProductDetailPage({ params }: PageProps)
             <ArrowLeft className="h-4 w-4" />
             Semua Produk
           </Link>
+          <CartButton cart={cart} />
         </div>
       </header>
 
@@ -129,6 +133,7 @@ export default async function StorefrontProductDetailPage({ params }: PageProps)
           </div>
 
           <ProductVariantSelector
+            productId={product.id}
             productName={product.name}
             tenantName={tenant.name}
             basePrice={basePrice}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useEffect } from 'react';
+import NextImage from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
@@ -10,7 +11,6 @@ import {
   Package, 
   Coins, 
   BarChart3, 
-  Key, 
   Upload, 
   Trash2, 
   Plus, 
@@ -19,18 +19,16 @@ import {
   Eye, 
   Globe, 
   ChevronDown, 
-  ChevronUp, 
   Info, 
   Image as ImageIcon,
-  CheckCircle2,
-  FileText
+  CheckCircle2
 } from 'lucide-react';
 import { ProductStatus } from '@prisma/client';
 import { createProductAction, editProductAction } from '@/app/dashboard/products/actions';
 
 interface ProductFormProps {
   categories: { id: string; name: string }[];
-  initialData?: any; // Product with variants and category
+  initialData?: ProductFormInitialData;
 }
 
 interface UIVariant {
@@ -40,6 +38,27 @@ interface UIVariant {
   stock: number;
   weightGram: number;
   sku: string;
+}
+
+interface ProductFormVariant {
+  id?: string;
+  name: string;
+  price: number | { toString(): string };
+  stock: number;
+  weightGram: number;
+  sku: string | null;
+}
+
+interface ProductFormInitialData {
+  id: string;
+  name: string;
+  categoryId: string | null;
+  description: string | null;
+  status: ProductStatus;
+  imageUrl: string | null;
+  slug: string;
+  basePrice: number | { toString(): string };
+  variants?: ProductFormVariant[];
 }
 
 // Convert string to URL-friendly slug
@@ -79,12 +98,12 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
   // Multi-Variant state
   const hasInitialMultiVariants = initialData?.variants && 
     initialData.variants.length > 0 && 
-    initialData.variants.some((v: any) => v.name !== 'Standar');
+    initialData.variants.some((v) => v.name !== 'Standar');
 
   const [hasVariants, setHasVariants] = useState(hasInitialMultiVariants);
   const [variantsList, setVariantsList] = useState<UIVariant[]>(
     hasInitialMultiVariants && initialData?.variants
-      ? initialData.variants.map((v: any) => ({
+      ? initialData.variants.map((v) => ({
           id: v.id,
           name: v.name,
           price: Number(v.price),
@@ -187,8 +206,8 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
       });
 
       setImageUrl(compressedBase64);
-    } catch (err: any) {
-      setUploadError(err.message || 'Terjadi kesalahan saat memproses gambar.');
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses gambar.');
     } finally {
       setIsUploading(false);
     }
@@ -249,8 +268,8 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
       });
 
       setImageUrl(compressedBase64);
-    } catch (err: any) {
-      setUploadError(err.message || 'Terjadi kesalahan saat memproses gambar.');
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Terjadi kesalahan saat memproses gambar.');
     } finally {
       setIsUploading(false);
     }
@@ -279,7 +298,7 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
   };
 
   // Update specific variant field
-  const updateVariantField = (index: number, field: keyof UIVariant, value: any) => {
+  const updateVariantField = (index: number, field: keyof UIVariant, value: string | number) => {
     const updated = [...variantsList];
     updated[index] = {
       ...updated[index],
@@ -703,11 +722,13 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
                     {/* Cover Preview Card */}
                     {imageUrl ? (
                       <div className="relative w-24 h-24 rounded-xl border border-[#E2E8F0] overflow-hidden group/img bg-slate-100 shadow-sm">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                          src={imageUrl} 
-                          alt="Cover Preview" 
-                          className="w-full h-full object-cover" 
+                        <NextImage
+                          src={imageUrl}
+                          alt="Cover Preview"
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                          unoptimized
                         />
                         <div className="absolute top-1 left-1 bg-[#10B981] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full select-none shadow">
                           Cover
@@ -1107,11 +1128,13 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
               {/* Product Cover image */}
               <div className="aspect-square bg-slate-100 relative overflow-hidden flex items-center justify-center">
                 {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
-                    src={imageUrl} 
-                    alt="Preview" 
-                    className="w-full h-full object-cover" 
+                  <NextImage
+                    src={imageUrl}
+                    alt="Preview"
+                    fill
+                    sizes="(min-width: 1024px) 384px, 100vw"
+                    className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-350 space-y-2 p-6">
@@ -1314,11 +1337,13 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
             <div className="border border-[#E2E8F0] rounded-[20px] overflow-hidden bg-white shadow-sm flex flex-col max-w-sm mx-auto select-none">
               <div className="aspect-square bg-slate-100 relative overflow-hidden flex items-center justify-center">
                 {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
-                    src={imageUrl} 
-                    alt="Preview" 
-                    className="w-full h-full object-cover" 
+                  <NextImage
+                    src={imageUrl}
+                    alt="Preview"
+                    fill
+                    sizes="100vw"
+                    className="object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-350 space-y-2 p-6">

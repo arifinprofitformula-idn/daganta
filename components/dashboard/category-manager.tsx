@@ -2,19 +2,19 @@
 
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Folder, Edit, EyeOff, Loader2, ArrowLeft, Layers, Sparkles } from 'lucide-react';
-import { CategoryForm } from './category-form';
+import { Folder, Edit, EyeOff, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
+import { CategoryForm, DashboardCategory } from './category-form';
 import { deactivateCategoryAction } from '@/app/dashboard/products/actions';
 
 interface CategoryManagerProps {
-  initialCategories: any[];
+  initialCategories: DashboardCategory[];
   tenantName: string;
 }
 
 export function CategoryManager({ initialCategories, tenantName }: CategoryManagerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [editingCategory, setEditingCategory] = useState<any | null>(null);
+  const [editingCategory, setEditingCategory] = useState<DashboardCategory | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDeactivate = async (categoryId: string) => {
@@ -113,7 +113,7 @@ export function CategoryManager({ initialCategories, tenantName }: CategoryManag
                         <td className="px-6 py-4 font-bold text-indigo-400 select-all w-16">{c.sortOrder}</td>
                         <td className="px-6 py-4 font-bold text-slate-200 select-all">{c.name}</td>
                         <td className="px-6 py-4 text-slate-450 font-mono text-[10px] select-all">{c.slug}</td>
-                        <td className="px-6 py-4 text-slate-400 truncate max-w-[200px]" title={c.description}>
+                        <td className="px-6 py-4 text-slate-400 truncate max-w-[200px]" title={c.description ?? undefined}>
                           {c.description || '-'}
                         </td>
                         <td className="px-6 py-4 text-center">

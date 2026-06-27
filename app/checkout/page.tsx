@@ -1,109 +1,91 @@
-import { headers } from 'next/headers';
 import Link from 'next/link';
-import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
-import MarketingHome from '../../components/marketing/marketing-home';
-import { CartProvider } from '../../lib/cart/use-cart';
-import CheckoutClient from './checkout-client';
+import { notFound } from 'next/navigation';
+import CheckoutForm from '@/components/storefront/CheckoutForm';
+import { getEnrichedCart } from '@/lib/cart/cart';
+import { getProvinces } from '@/lib/data-access/regions';
+import { getStorefrontTenantContext } from '@/lib/tenant/storefront-tenant';
+import MarketingHome from '@/components/marketing/marketing-home';
 
 export default async function CheckoutPage() {
-  const headersList = await headers();
-  const host = headersList.get('host') ?? '';
-
-  // 1. Resolusi Tenant
   const result = await getStorefrontTenantContext();
 
   if (result.status === 'MARKETING_SITE') {
     return <MarketingHome />;
   }
 
-  if (result.status === 'NOT_FOUND' || result.status === 'RESERVED') {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="mx-auto w-16 h-16 bg-indigo-950 border border-indigo-500/30 rounded-full flex items-center justify-center text-indigo-400">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko Tidak Ditemukan</h1>
-            <p className="text-slate-400 text-sm">
-              Maaf, kami tidak dapat menemukan toko online dengan alamat domain <code className="px-2 py-1 bg-slate-950 border border-slate-800 rounded font-mono text-indigo-300 text-xs">{host}</code>.
-            </p>
-          </div>
-          <div className="pt-2">
-            <a 
-              href="https://daganta.store" 
-              className="inline-block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-sm"
-            >
-              Kembali ke Daganta
-            </a>
-          </div>
-        </div>
-      </main>
-    );
+  if (result.status !== 'SUCCESS' || !result.tenant) {
+    notFound();
   }
 
-  if (result.status === 'BLOCKED' || result.status === 'SUSPENDED') {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="mx-auto w-16 h-16 bg-rose-950 border border-rose-500/30 rounded-full flex items-center justify-center text-rose-400">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Toko sementara belum aktif</h1>
-            <p className="text-slate-400 text-sm">
-              Silakan hubungi pemilik toko atau admin Daganta untuk informasi lebih lanjut.
-            </p>
-          </div>
-          <div className="pt-2">
-            <a 
-              href="mailto:support@daganta.id" 
-              className="inline-block w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-350 font-medium rounded-xl transition-all border border-slate-700 text-sm"
-            >
-              Hubungi Dukungan Daganta
-            </a>
-          </div>
-        </div>
-      </main>
-    );
-  }
   if (result.accessMode === 'STOREFRONT_READONLY') {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="mx-auto w-16 h-16 bg-amber-950 border border-amber-500/30 rounded-full flex items-center justify-center text-amber-450">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">Checkout Dibatasi</h1>
-            <p className="text-slate-400 text-sm">
-              Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.
-            </p>
-          </div>
-          <div className="pt-2">
-            <Link 
-              href="/" 
-              className="inline-block w-full py-3 px-4 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-amber-600/20 text-sm"
-            >
-              Kembali ke Beranda Toko
-            </Link>
-          </div>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-6 text-white">
+        <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-2xl">
+          <h1 className="text-2xl font-bold tracking-tight">Checkout Dibatasi</h1>
+          <p className="mt-3 text-sm text-slate-400">
+            Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.
+          </p>
+          <Link
+            href="/"
+            className="mt-6 inline-block w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-amber-500"
+          >
+            Kembali ke Beranda Toko
+          </Link>
         </div>
       </main>
     );
   }
 
-  const tenant = result.tenant!;
+  const tenant = result.tenant;
+  const [cart, provinces] = await Promise.all([
+    getEnrichedCart(tenant.id),
+    getProvinces(),
+  ]);
 
   return (
-    <CartProvider subdomain={tenant.subdomain}>
-      <CheckoutClient tenant={tenant} />
-    </CartProvider>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-sm font-black uppercase text-white">
+              {tenant.name.substring(0, 1)}
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase leading-none tracking-tight">{tenant.name}</p>
+              <p className="mt-1 text-[10px] font-semibold text-slate-400">{tenant.subdomain}.daganta.store</p>
+            </div>
+          </Link>
+
+          <Link href="/products" className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+            Kembali ke Produk
+          </Link>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-8">
+          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">Checkout</p>
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">Selesaikan Pesanan</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Isi data pengiriman. Total pesanan akan dihitung ulang dari database toko.
+          </p>
+        </div>
+
+        {cart.items.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
+            <h2 className="text-lg font-black text-slate-900">Keranjang masih kosong</h2>
+            <p className="mt-2 text-sm text-slate-500">Tambahkan produk terlebih dahulu sebelum checkout.</p>
+            <Link
+              href="/products"
+              className="mt-6 inline-flex rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+            >
+              Lihat Produk
+            </Link>
+          </div>
+        ) : (
+          <CheckoutForm tenantName={tenant.name} provinces={provinces} cart={cart} />
+        )}
+      </section>
+    </main>
   );
 }

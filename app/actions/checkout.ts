@@ -3,7 +3,7 @@
 import { prisma } from '../../lib/prisma';
 import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
 import { OrderStatus, PaymentMethod, PaymentProvider, NotificationChannel, NotificationEventType } from '@prisma/client';
-import { getTenantSubscriptionPolicy } from '../../lib/billing/lifecycle';
+import { getTenantRestrictions } from '../../lib/tenant/lifecycle';
 import { manualPaymentAdapter } from '../../lib/payments';
 import { createNotificationEvent } from '../../lib/notifications/create-event';
 
@@ -59,15 +59,14 @@ export async function processCheckout(payload: CheckoutPayload) {
 
     const tenant = resolution.tenant;
 
-    const policy = await getTenantSubscriptionPolicy(tenant.id);
-    if (!policy.canCheckout) {
+    const restrictions = getTenantRestrictions(tenant.status);
+    if (!restrictions.canReceiveOrders) {
       return { success: false, error: 'Checkout sementara dibatasi karena masa aktif toko perlu diperpanjang.' };
     }
 
     // 3. Validasi & Hitung Ulang Harga serta Berat berdasarkan Database (mencegah manipulasi client-side)
     const verifiedItems: VerifiedItem[] = [];
     let calculatedSubtotal = 0;
-    let totalWeightGram = 0;
 
     for (const item of items) {
       if (item.quantity <= 0) {
@@ -136,8 +135,6 @@ export async function processCheckout(payload: CheckoutPayload) {
 
       const totalPrice = unitPrice * item.quantity;
       calculatedSubtotal += totalPrice;
-      totalWeightGram += weightGram * item.quantity;
-
       verifiedItems.push({
         productId: product.id,
         variantId: item.variantId,

@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Prisma } from '@prisma/client';
 import Link from 'next/link';
 
@@ -26,7 +27,6 @@ interface ProductCardProps {
 
 export default function ProductCard({ 
   product, 
-  isReadOnly = false, 
   primaryColor = '#4F46E5', // Default Indigo
   hoverColor = '#4338CA'
 }: ProductCardProps) {
@@ -62,10 +62,13 @@ export default function ProductCard({
       {/* Product Image (Rasio 4:5 Premium Dominan) */}
       <Link href={`/products/${product.slug}`} className="relative aspect-[4/5] w-full bg-slate-50 flex items-center justify-center overflow-hidden border-b border-slate-100 block cursor-pointer">
         {product.imageUrl ? (
-          <img 
-            src={product.imageUrl} 
+          <Image
+            src={product.imageUrl}
             alt={product.name}
-            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-slate-300 space-y-2 select-none p-6">

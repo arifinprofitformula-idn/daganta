@@ -47,7 +47,9 @@ export function getInvoiceStatusLabel(status: InvoiceStatus) {
   const labels: Record<InvoiceStatus, string> = {
     DRAFT: 'Draft',
     UNPAID: 'Belum Dibayar',
+    PENDING_VERIFICATION: 'Menunggu Verifikasi',
     PAID: 'Lunas',
+    REJECTED: 'Ditolak',
     VOID: 'Dibatalkan / Dibatalkan Sistem',
   };
 

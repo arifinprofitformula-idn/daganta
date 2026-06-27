@@ -87,7 +87,7 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   [PaymentMethod.MANUAL_TRANSFER]: 'Transfer Manual',
 };
 
-export default function OrdersClient({ orders, tenantName }: OrdersClientProps) {
+export default function OrdersClient({ orders }: OrdersClientProps) {
   const router = useRouter();
 
   // State
@@ -187,7 +187,7 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
       } else {
         setUpdateError(res.error || 'Gagal memperbarui status pesanan.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update status client error:', err);
       setUpdateError('Terjadi kesalahan tidak terduga.');
     } finally {
@@ -240,7 +240,7 @@ export default function OrdersClient({ orders, tenantName }: OrdersClientProps) 
       } else {
         setPaymentUpdateError(res.error || 'Gagal memperbarui status pembayaran.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update payment status client error:', err);
       setPaymentUpdateError('Terjadi kesalahan tidak terduga.');
     } finally {

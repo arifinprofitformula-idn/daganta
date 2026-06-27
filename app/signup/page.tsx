@@ -5,10 +5,7 @@ import SignupFormCard from './signup-form-card';
 import { 
   Package, 
   ShoppingBag, 
-  TrendingUp, 
   ArrowUpRight, 
-  Users,
-  CheckCircle,
   Sparkles
 } from 'lucide-react';
 

@@ -1,7 +1,8 @@
 import { NotificationAdapter, AdapterSendResult } from '../types';
 
 export class WhatsAppAdapter implements NotificationAdapter {
-  async send(recipient: string, message: string): Promise<AdapterSendResult> {
+  async send(recipient: string, message?: string): Promise<AdapterSendResult> {
+    void message;
     // Dry-run skeleton. Does not send real messages.
     // Console logging safety check: Mask phone number.
     const maskedPhone = recipient && recipient.length > 5

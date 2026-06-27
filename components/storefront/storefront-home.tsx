@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import ProductCard from './product-card';
+import CartButton from './CartButton';
 import { getTenantThemeConfig, TenantThemeConfig } from '../../lib/tenant/theme-config';
 import { useCart } from '../../lib/cart/use-cart';
+import type { EnrichedCart } from '../../lib/cart/cart';
 
 interface StorefrontHomeProps {
   tenant: {
@@ -13,16 +16,36 @@ interface StorefrontHomeProps {
     slug: string;
     subdomain: string;
   };
-  products: any[];
+  products: StorefrontProduct[];
   isReadOnly?: boolean;
   tenantWhatsapp: string | null; // Dinamis dari default address tenant, nullable
+  cart?: EnrichedCart;
+}
+
+interface StorefrontProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  basePrice: number;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
+  category?: {
+    name: string;
+  } | null;
+  variants?: Array<{
+    id: string;
+    name: string;
+    price: number;
+  }>;
 }
 
 export default function StorefrontHome({ 
   tenant, 
   products, 
   isReadOnly = false,
-  tenantWhatsapp 
+  tenantWhatsapp,
+  cart,
 }: StorefrontHomeProps) {
   // 1. Ambil Konfigurasi Tema Dinamis untuk Tenant ini
   const theme: TenantThemeConfig = getTenantThemeConfig(tenant.slug);
@@ -92,7 +115,8 @@ export default function StorefrontHome({
   // Dapatkan daftar kategori dinamis dari database produk
   const categories = ['Semua', ...Array.from(new Set(products
     .filter(p => p.category?.name)
-    .map(p => p.category.name)
+    .map(p => p.category?.name)
+    .filter((name): name is string => Boolean(name))
   ))];
 
   // Ambil produk unggulan utama (Apple-style featured)
@@ -167,23 +191,27 @@ export default function StorefrontHome({
           {/* Actions Block */}
           <div className="flex items-center gap-3">
             {/* Dynamic Cart Icon Link */}
-            <Link 
-              href="/cart"
-              className="relative p-2.5 text-slate-600 hover:text-[var(--primary)] transition-all flex items-center justify-center shrink-0 bg-slate-50 hover:bg-slate-100/70 border border-slate-200/50 rounded-xl shadow-sm hover:shadow-md"
-              title="Keranjang Belanja"
-            >
-              <svg className="w-4.5 h-4.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2.3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {isHydrated && totalItems > 0 && (
-                <span 
-                  className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full text-[9px] font-black text-white flex items-center justify-center px-1 border border-white"
-                  style={{ backgroundColor: theme.primaryColor }}
-                >
-                  {totalItems}
-                </span>
-              )}
-            </Link>
+            {cart ? (
+              <CartButton cart={cart} />
+            ) : (
+              <Link 
+                href="/cart"
+                className="relative p-2.5 text-slate-600 hover:text-[var(--primary)] transition-all flex items-center justify-center shrink-0 bg-slate-50 hover:bg-slate-100/70 border border-slate-200/50 rounded-xl shadow-sm hover:shadow-md"
+                title="Keranjang Belanja"
+              >
+                <svg className="w-4.5 h-4.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2.3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {isHydrated && totalItems > 0 && (
+                  <span 
+                    className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full text-[9px] font-black text-white flex items-center justify-center px-1 border border-white"
+                    style={{ backgroundColor: theme.primaryColor }}
+                  >
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {mainWhatsappUrl && !isReadOnly ? (
               <a 
@@ -269,11 +297,14 @@ export default function StorefrontHome({
 
           {/* Hero Right visual Grid (Lifestyle Image) */}
           <div className="relative">
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-slate-100 shadow-2xl bg-slate-200 group">
-              <img 
-                src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1200&auto=format&fit=crop" 
-                alt="Martial arts rattan training staff background" 
-                className="object-cover w-full h-full group-hover:scale-102 transition-transform duration-700"
+            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-slate-100 shadow-2xl bg-slate-200 group">
+              <Image
+                src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1200&auto=format&fit=crop"
+                alt="Martial arts rattan training staff background"
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-102"
+                unoptimized
               />
             </div>
             {/* Overlay float badge */}
@@ -355,10 +386,13 @@ export default function StorefrontHome({
               {/* Showcase Image (Left) */}
               <div className="relative aspect-[4/5] w-full max-w-sm mx-auto bg-slate-200/50 rounded-2xl overflow-hidden shadow-2xl border border-slate-200/30 group">
                 {featuredProduct.imageUrl ? (
-                  <img 
-                    src={featuredProduct.imageUrl} 
+                  <Image
+                    src={featuredProduct.imageUrl}
                     alt={featuredProduct.name}
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                    fill
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-350 p-8 w-full h-full select-none text-center">
@@ -434,10 +468,13 @@ export default function StorefrontHome({
               {/* Image Left */}
               <div className="lg:col-span-5 relative aspect-[4/3] rounded-3xl overflow-hidden border border-slate-150 shadow-2xl bg-white flex items-center justify-center p-2 group">
                 {bestSellerProduct.imageUrl ? (
-                  <img 
-                    src={bestSellerProduct.imageUrl} 
+                  <Image
+                    src={bestSellerProduct.imageUrl}
                     alt={bestSellerProduct.name}
-                    className="object-cover w-full h-full group-hover:scale-103 transition-transform duration-500 rounded-2xl"
+                    fill
+                    sizes="(min-width: 1024px) 40vw, 100vw"
+                    className="rounded-2xl object-cover transition-transform duration-500 group-hover:scale-103"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-350 p-6 select-none text-center">
@@ -627,11 +664,14 @@ export default function StorefrontHome({
 
           {/* Story Right Image Placeholder */}
           <div className="lg:col-span-5 relative">
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-slate-100 shadow-2xl bg-slate-200">
-              <img 
-                src={theme.aboutImgPlaceholder} 
-                alt="Tentang Toya Nusantara" 
-                className="object-cover w-full h-full"
+            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-slate-100 shadow-2xl bg-slate-200">
+              <Image
+                src={theme.aboutImgPlaceholder}
+                alt="Tentang Toya Nusantara"
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover"
+                unoptimized
               />
             </div>
             {/* Soft backdrop accent shape */}
@@ -664,13 +704,20 @@ export default function StorefrontHome({
                     ))}
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed font-medium italic">
-                    "{testi.text}"
+                    &quot;{testi.text}&quot;
                   </p>
                 </div>
                 {/* User Info */}
                 <div className="flex items-center gap-3 pt-3 border-t border-slate-50">
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
-                    <img src={testi.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100'} alt={testi.name} className="object-cover w-full h-full" />
+                    <Image
+                      src={testi.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100'}
+                      alt={testi.name}
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
                   </div>
                   <div className="flex flex-col text-left">
                     <span className="text-[11px] font-black text-slate-800 leading-tight">{testi.name}</span>

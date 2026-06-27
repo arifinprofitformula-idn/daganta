@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ProductCard from './product-card';
@@ -14,6 +15,15 @@ interface Variant {
   price: number;
   stock: number;
   weightGram: number;
+}
+
+interface RelatedProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  basePrice: number;
+  imageUrl: string | null;
 }
 
 interface ProductDetailProps {
@@ -35,7 +45,7 @@ interface ProductDetailProps {
     } | null;
     variants: Variant[];
   };
-  relatedProducts: any[];
+  relatedProducts: RelatedProduct[];
   tenantWhatsapp: string | null; // Dinamis dari default address tenant, nullable
   isReadOnly?: boolean;
 }
@@ -269,10 +279,13 @@ export default function ProductDetail({
           <div className="space-y-4">
             <div className="relative aspect-[4/5] w-full bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl">
               {product.imageUrl ? (
-                <img 
-                  src={product.imageUrl} 
+                <Image
+                  src={product.imageUrl}
                   alt={product.name}
-                  className="object-cover w-full h-full"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-slate-300 space-y-3 p-8">

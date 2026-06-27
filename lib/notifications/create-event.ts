@@ -1,5 +1,6 @@
-import { NotificationChannel, NotificationEventStatus, NotificationEventType } from '@prisma/client';
-import { templates } from './templates';
+import { NotificationChannel, NotificationEventStatus, NotificationEventType, Prisma } from '@prisma/client';
+import { templates, NotificationTemplateParams } from './templates';
+import type { NotificationPayloadData } from './types';
 
 interface CreateEventParams {
   tenantId: string;
@@ -8,12 +9,12 @@ interface CreateEventParams {
   channel: NotificationChannel;
   type: NotificationEventType;
   recipient: string | null;
-  params: any; // parameters passed to template function
-  payload?: any;
+  params: NotificationTemplateParams;
+  payload?: NotificationPayloadData;
 }
 
 export async function createNotificationEvent(
-  tx: any, // Supports either Prisma transaction client or standard prisma client
+  tx: Prisma.TransactionClient,
   data: CreateEventParams
 ) {
   const templateFn = templates[data.type];
@@ -34,7 +35,7 @@ export async function createNotificationEvent(
       recipient: data.recipient || null,
       subject: subject || null,
       message,
-      payload: data.payload || null,
+      payload: data.payload ?? Prisma.JsonNull,
     },
   });
 }

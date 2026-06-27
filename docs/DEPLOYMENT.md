@@ -155,3 +155,35 @@ Push ke branch `main` akan menjalankan CI build, lalu deploy ke `/var/www/dagant
 - Jalankan migration sebagai langkah release terkontrol.
 - Pantau `/api/health` dan container healthcheck.
 - Pastikan certbot renewal aktif dan reload/restart nginx setelah renewal.
+
+## 11. Cron Tenant Lifecycle
+
+Tenant lifecycle perlu dijalankan setiap hari untuk mengubah status toko dari `EXPIRING_SOON`, `GRACE_PERIOD`, `LIMITED`, sampai `SUSPENDED`.
+
+Tambahkan `CRON_SECRET` di `.env.production`:
+
+```env
+CRON_SECRET=replace-with-a-long-random-cron-secret
+```
+
+Tambahkan crontab VPS:
+
+```bash
+crontab -e
+```
+
+Isi:
+
+```cron
+0 0 * * * curl --fail -H "x-cron-secret: replace-with-a-long-random-cron-secret" https://daganta.store/api/cron/tenant-lifecycle >> /var/log/daganta-tenant-lifecycle.log 2>&1
+```
+
+## 12. Cron Notification Queue
+
+Notification worker memproses maksimal 10 event per batch dan aman dijalankan setiap 5 menit.
+
+Tambahkan crontab VPS:
+
+```cron
+*/5 * * * * curl --fail -H "x-cron-secret: replace-with-a-long-random-cron-secret" https://daganta.store/api/cron/process-notifications >> /var/log/daganta-notification-worker.log 2>&1
+```

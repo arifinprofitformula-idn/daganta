@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { PlatformRole } from '@prisma/client';
+import type { PlatformAuthUser } from '@/lib/platform/auth';
 import { isRecoverablePrismaConnectionError } from '@/lib/prisma-errors';
 import { getCurrentUserProfile } from './session';
 import { getActiveTenantCookie, clearActiveTenantCookie } from './dashboard-tenant-cookie';
@@ -14,7 +15,7 @@ export interface SafeTenantInfo {
 
 export interface TenantContext {
   status: 'SUCCESS' | 'NO_PROFILE' | 'NO_MEMBERSHIP';
-  user: any;
+  user: PlatformAuthUser | null;
   userProfile: {
     id: string;
     email: string;

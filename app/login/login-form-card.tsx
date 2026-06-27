@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useFormStatus } from 'react-dom';
 import { 
   Eye, 
@@ -58,10 +59,13 @@ export default function LoginFormCard({ errorMsg, infoMsg }: LoginFormCardProps)
         
         {/* Official Logo Brand Asset */}
         <div className="w-32 h-auto flex items-center justify-center">
-          <img
+          <Image
             src="/logo.png"
             alt="Daganta Logo"
-            className="w-full h-auto object-contain"
+            width={128}
+            height={40}
+            className="h-auto w-full object-contain"
+            priority
           />
         </div>
         

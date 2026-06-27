@@ -1,9 +1,9 @@
 import { TenantStatus } from '@prisma/client';
 import { headers } from 'next/headers';
-import { getTenantSubscriptionPolicy } from '@/lib/billing/lifecycle';
 import { prisma } from '@/lib/prisma';
 import { resolveTenantFromHost } from '@/lib/tenant/resolve-tenant';
 import type { TenantResolveResult } from '@/lib/tenant/types';
+import { getTenantRestrictions } from '@/lib/tenant/lifecycle';
 
 function createResult(result: Omit<TenantResolveResult, 'suspended'> & { suspended?: boolean }): TenantResolveResult {
   return {
@@ -59,9 +59,9 @@ export async function getStorefrontTenantContext(): Promise<TenantResolveResult>
     });
   }
 
-  const policy = await getTenantSubscriptionPolicy(tenant.id);
+  const restrictions = getTenantRestrictions(tenant.status);
 
-  if (!policy.canViewStorefront) {
+  if (!restrictions.storefrontActive) {
     return createResult({
       status: 'BLOCKED',
       accessMode: 'BLOCKED',
@@ -72,7 +72,7 @@ export async function getStorefrontTenantContext(): Promise<TenantResolveResult>
 
   return createResult({
     status: 'SUCCESS',
-    accessMode: policy.canCheckout ? 'STOREFRONT_FULL' : 'STOREFRONT_READONLY',
+    accessMode: restrictions.canReceiveOrders ? 'STOREFRONT_FULL' : 'STOREFRONT_READONLY',
     tenant: resolvedTenant,
     error: null,
   });

@@ -13,9 +13,7 @@ interface TopbarProps {
 }
 
 export default function Topbar({
-  tenantName,
   userEmail,
-  hasProfile,
   activeTenant,
   availableTenants
 }: TopbarProps) {

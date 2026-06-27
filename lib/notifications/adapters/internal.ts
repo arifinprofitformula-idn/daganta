@@ -1,7 +1,8 @@
 import { NotificationAdapter, AdapterSendResult } from '../types';
 
 export class InternalAdapter implements NotificationAdapter {
-  async send(recipient: string, message: string): Promise<AdapterSendResult> {
+  async send(recipient: string, message?: string): Promise<AdapterSendResult> {
+    void message;
     // Internal system log skeleton.
     console.log(`[INTERNAL] System dispatch log registered to: ${recipient}`);
 

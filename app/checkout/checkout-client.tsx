@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../../lib/cart/use-cart';
@@ -87,7 +88,7 @@ export default function CheckoutClient({ tenant }: CheckoutClientProps) {
         setFormError(result.error || 'Gagal memproses pesanan.');
         setIsSubmitting(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Checkout error:', err);
       setFormError('Terjadi kesalahan tidak terduga. Silakan coba kembali.');
       setIsSubmitting(false);
@@ -331,9 +332,9 @@ export default function CheckoutClient({ tenant }: CheckoutClientProps) {
                 <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 pr-1">
                   {cartItems.map((item) => (
                     <div key={`${item.id}-${item.variantId || 'none'}`} className="py-3 flex items-center gap-3 text-xs">
-                      <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="relative w-10 h-10 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full" />
+                          <Image src={item.imageUrl} alt={item.name} fill sizes="40px" className="object-cover" unoptimized />
                         ) : (
                           <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

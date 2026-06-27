@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, PackageSearch } from 'lucide-react';
+import CartButton from '../../../components/storefront/CartButton';
 import ProductCard from '../../../components/storefront/product-card';
 import { getStorefrontProductsByTenant } from '../../../lib/data-access/products';
 import { getStorefrontTenantContext } from '../../../lib/tenant/storefront-tenant';
+import { getEnrichedCart } from '../../../lib/cart/cart';
 
 function serializeProduct(product: Awaited<ReturnType<typeof getStorefrontProductsByTenant>>[number]) {
   return {
@@ -30,7 +32,10 @@ export default async function StorefrontProductsPage() {
   }
 
   const tenant = result.tenant;
-  const products = await getStorefrontProductsByTenant(tenant.id);
+  const [products, cart] = await Promise.all([
+    getStorefrontProductsByTenant(tenant.id),
+    getEnrichedCart(tenant.id),
+  ]);
   const serializedProducts = products.map(serializeProduct);
   const isReadOnly = result.accessMode === 'STOREFRONT_READONLY';
 
@@ -48,13 +53,16 @@ export default async function StorefrontProductsPage() {
             </div>
           </Link>
 
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Beranda
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Beranda
+            </Link>
+            <CartButton cart={cart} />
+          </div>
         </div>
       </header>
 

@@ -1,7 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MessageCircle, ShoppingCart } from 'lucide-react';
+import { addCartItemAction } from '@/app/actions/cart';
 
 export interface StorefrontVariantOption {
   id: string;
@@ -12,6 +14,7 @@ export interface StorefrontVariantOption {
 }
 
 interface ProductVariantSelectorProps {
+  productId: string;
   productName: string;
   tenantName: string;
   basePrice: number;
@@ -39,13 +42,17 @@ function normalizeWhatsappNumber(phone: string) {
 }
 
 export default function ProductVariantSelector({
+  productId,
   productName,
   tenantName,
   basePrice,
   variants,
   whatsappNumber,
 }: ProductVariantSelectorProps) {
+  const router = useRouter();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(variants[0]?.id ?? null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
   const selectedVariant = variants.find((variant) => variant.id === selectedVariantId) ?? null;
   const currentPrice = selectedVariant?.price ?? basePrice;
   const currentStock = selectedVariant ? selectedVariant.stock : variants.reduce((total, variant) => total + variant.stock, 0);
@@ -65,6 +72,22 @@ export default function ProductVariantSelector({
     const message = `Halo, saya tertarik dengan produk *${productName}* (${formattedPrice}) dari toko ${tenantName}. Apakah masih tersedia?`;
     return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
   }, [formattedPrice, productName, tenantName, whatsappNumber]);
+
+  async function handleAddToCart() {
+    setIsAdding(true);
+    setCartMessage(null);
+
+    const result = await addCartItemAction(productId, selectedVariant?.id ?? null, 1);
+
+    if (result.success) {
+      setCartMessage('Produk ditambahkan ke keranjang.');
+      router.refresh();
+    } else {
+      setCartMessage(result.error ?? 'Gagal menambahkan produk ke keranjang.');
+    }
+
+    setIsAdding(false);
+  }
 
   return (
     <div className="space-y-6">
@@ -128,13 +151,20 @@ export default function ProductVariantSelector({
 
         <button
           type="button"
-          disabled
-          className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-400"
+          disabled={isAdding || (hasVariantStock && currentStock <= 0)}
+          onClick={handleAddToCart}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
         >
           <ShoppingCart className="h-4 w-4" />
-          Tambah ke Keranjang
+          {isAdding ? 'Menambahkan...' : 'Tambah ke Keranjang'}
         </button>
       </div>
+
+      {cartMessage && (
+        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
+          {cartMessage}
+        </p>
+      )}
     </div>
   );
 }

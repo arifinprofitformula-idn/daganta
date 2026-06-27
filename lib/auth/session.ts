@@ -1,4 +1,5 @@
 import type { PlatformRole } from '@prisma/client';
+import type { PlatformAuthUser } from '@/lib/platform/auth';
 import { getAuthAdapter } from '@/lib/platform/auth';
 import { isRecoverablePrismaConnectionError } from '@/lib/prisma-errors';
 
@@ -8,7 +9,7 @@ export async function getCurrentUser() {
 }
 
 export interface UserAuthProfile {
-  user: any;
+  user: PlatformAuthUser;
   profile: {
     id: string;
     email: string;
