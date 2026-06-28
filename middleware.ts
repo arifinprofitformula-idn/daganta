@@ -31,8 +31,26 @@ function isStorefrontRoute(pathname: string) {
   });
 }
 
+function getInternalBaseUrl(request: NextRequest) {
+  const configuredUrl = process.env.INTERNAL_APP_URL?.trim();
+
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  if (process.env.NODE_ENV === 'production' && process.env.PORT) {
+    return `http://127.0.0.1:${process.env.PORT}`;
+  }
+
+  return request.url;
+}
+
+function createInternalUrl(pathname: string, request: NextRequest) {
+  return new URL(pathname, getInternalBaseUrl(request));
+}
+
 async function resolveTenantForMiddleware(request: NextRequest) {
-  const url = new URL('/api/internal/tenant-resolve', request.url);
+  const url = createInternalUrl('/api/internal/tenant-resolve', request);
   url.searchParams.set('host', request.headers.get('host') ?? '');
 
   const response = await fetch(url, {
@@ -50,7 +68,7 @@ async function resolveTenantForMiddleware(request: NextRequest) {
 }
 
 async function resolveAgentAccessForMiddleware(request: NextRequest) {
-  const url = new URL('/api/internal/agent-access', request.url);
+  const url = createInternalUrl('/api/internal/agent-access', request);
   const response = await fetch(url, {
     headers: request.headers,
     cache: 'no-store',
