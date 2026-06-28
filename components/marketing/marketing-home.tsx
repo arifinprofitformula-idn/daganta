@@ -192,7 +192,7 @@ export default function MarketingHome() {
               Masuk
             </a>
             <a 
-              href="/signup?plan=starter" 
+              href="/register?plan=starter" 
               className="px-5 py-2.5 bg-[#2563EB] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-[#2563EB]/15 hover:shadow-lg transform hover:-translate-y-0.5"
             >
               Coba Gratis 14 Hari
@@ -264,7 +264,7 @@ export default function MarketingHome() {
                 Masuk
               </a>
               <a 
-                href="/signup?plan=starter" 
+                href="/register?plan=starter" 
                 className="w-full text-center py-3 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold rounded-xl transition-all shadow-md"
               >
                 Coba Gratis 14 Hari
@@ -307,13 +307,15 @@ export default function MarketingHome() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <a 
-                href="/signup?plan=starter"
+                href="/register?plan=starter"
                 className="w-full sm:w-auto px-8 py-4 bg-[#2563EB] hover:bg-[#1d4ed8] active:bg-[#1e40af] text-white font-bold rounded-2xl transition-all shadow-xl shadow-[#2563EB]/20 hover:shadow-2xl transform hover:-translate-y-0.5 text-center text-base"
               >
                 Coba Gratis 14 Hari
               </a>
               <a 
-                href="#demo"
+                href="https://toya.daganta.store"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-[#0B1F33] font-semibold rounded-2xl border border-[#E2E8F0] transition-all shadow-sm text-center text-base"
               >
                 Lihat Demo Toko
@@ -343,7 +345,7 @@ export default function MarketingHome() {
                   <div className="w-3 h-3 rounded-full bg-green-400" />
                 </div>
                 <div className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-mono text-slate-500 max-w-[200px] truncate">
-                  toyanusantara.daganta.store
+                  toya.daganta.store
                 </div>
                 <div className="w-4" />
               </div>
@@ -641,7 +643,7 @@ export default function MarketingHome() {
 
           <div className="text-center pt-12">
             <a 
-              href="/signup?plan=starter" 
+              href="/register?plan=starter" 
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#2563EB]/15 transform hover:-translate-y-0.5"
             >
               <span>Mulai Buat Webstore</span>
@@ -833,7 +835,7 @@ export default function MarketingHome() {
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white">Toya Nusantara</h4>
-                      <p className="text-[9px] text-slate-400">toyanusantara.daganta.store</p>
+                      <p className="text-[9px] text-slate-400">toya.daganta.store</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -964,7 +966,7 @@ export default function MarketingHome() {
 
               <div className="pt-2 flex flex-col sm:flex-row gap-4">
                 <a 
-                  href="http://toyanusantara.daganta.store" 
+                  href="https://toya.daganta.store" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="px-8 py-3.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold rounded-xl text-center shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
@@ -973,7 +975,7 @@ export default function MarketingHome() {
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
                 <span className="text-xs text-slate-400 flex items-center justify-center sm:justify-start font-semibold">
-                  (subdomain: toyanusantara.daganta.store)
+                  (subdomain: toya.daganta.store)
                 </span>
               </div>
             </div>
@@ -1054,7 +1056,7 @@ export default function MarketingHome() {
 
               <div className="pt-8">
                 <a 
-                  href="/signup?plan=starter" 
+                  href="/register?plan=starter" 
                   className="block w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-[#0B1F33] text-xs font-extrabold rounded-xl text-center transition-colors"
                 >
                   Mulai Sekarang
@@ -1106,7 +1108,7 @@ export default function MarketingHome() {
 
               <div className="pt-8">
                 <a 
-                  href="/signup?plan=growth" 
+                  href="/register?plan=growth" 
                   className="block w-full py-3.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-extrabold rounded-xl text-center shadow-md shadow-[#2563EB]/15 transition-colors"
                 >
                   Pilih Paket Growth
@@ -1309,13 +1311,15 @@ export default function MarketingHome() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 max-w-md mx-auto">
               <a 
-                href="/signup?plan=starter" 
+                href="/register?plan=starter" 
                 className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-[#0B1F33] font-bold rounded-2xl text-center shadow-lg transition-all transform hover:-translate-y-0.5 text-base"
               >
                 Coba Gratis 14 Hari
               </a>
               <a 
-                href="#demo" 
+                href="https://toya.daganta.store" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-2xl text-center transition-all text-base"
               >
                 Lihat Demo Webstore

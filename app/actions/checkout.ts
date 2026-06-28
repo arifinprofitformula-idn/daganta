@@ -1,11 +1,13 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { prisma } from '../../lib/prisma';
 import { getStorefrontTenantContext } from '../../lib/tenant/storefront-tenant';
 import { OrderStatus, PaymentMethod, PaymentProvider, NotificationChannel, NotificationEventType } from '@prisma/client';
 import { getTenantRestrictions } from '../../lib/tenant/lifecycle';
 import { manualPaymentAdapter } from '../../lib/payments';
 import { createNotificationEvent } from '../../lib/notifications/create-event';
+import { getClientIp, rateLimitByIP } from '../../lib/rate-limit';
 
 interface CheckoutItemPayload {
   id: string; // productId
@@ -39,6 +41,13 @@ interface VerifiedItem {
 
 export async function processCheckout(payload: CheckoutPayload) {
   try {
+    const requestHeaders = await headers();
+    const checkoutLimit = await rateLimitByIP(getClientIp(requestHeaders), 5, 60);
+
+    if (!checkoutLimit.success) {
+      return { success: false, error: 'Terlalu banyak percobaan checkout. Coba lagi sebentar lagi.' };
+    }
+
     const { name, phone, email, fullAddress, province, city, district, postalCode, notes, items } = payload;
 
     // 1. Validasi input dasar

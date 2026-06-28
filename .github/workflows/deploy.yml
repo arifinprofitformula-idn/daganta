@@ -58,7 +58,7 @@ jobs:
             set -euo pipefail
             cd /var/www/daganta
             git pull origin main
-            docker compose -f compose.production.yml build --no-cache
-            docker compose -f compose.production.yml up -d
-            curl -fsS http://localhost:3000/api/health | grep '"status":"ok"'
+            docker compose --env-file .env.production -f compose.production.yml build --no-cache
+            docker compose --env-file .env.production -f compose.production.yml up -d
+            docker compose --env-file .env.production -f compose.production.yml exec -T app node -e "fetch('http://127.0.0.1:3000/api/health').then(async (response) => { const body = await response.text(); if (!response.ok || !body.includes('\"status\":\"ok\"')) process.exit(1); }).catch(() => process.exit(1))"
           EOF

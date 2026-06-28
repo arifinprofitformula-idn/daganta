@@ -3,6 +3,7 @@ import { PaymentMethod } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getPaymentAdapter } from '@/lib/payments';
 import type { PaymentRequestItem } from '@/lib/payments';
+import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 import { resolveTenantFromHost } from '@/lib/tenant/resolve-tenant';
 
 interface CreatePaymentBody {
@@ -24,6 +25,12 @@ async function getTenantIdFromRequest(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const paymentLimit = await rateLimitByIP(getClientIp(request.headers), 5, 60);
+
+  if (!paymentLimit.success) {
+    return jsonResponse({ success: false, error: 'Terlalu banyak request pembayaran.' }, 429);
+  }
+
   let body: CreatePaymentBody;
 
   try {

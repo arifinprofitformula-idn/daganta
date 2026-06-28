@@ -1,15 +1,39 @@
 import './globals.css';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: 'Daganta - Platform Webstore Instan UMKM & Agen Digital',
+  metadataBase: new URL('https://daganta.store'),
+  title: {
+    default: 'Daganta - Platform Webstore Instan UMKM & Agen Digital',
+    template: '%s | Daganta',
+  },
   description: 'Daganta membantu UMKM memiliki toko online mandiri yang terhubung dengan WhatsApp secara instan.',
+  openGraph: {
+    title: 'Daganta - Webstore Instan untuk UMKM dan Agen Digital',
+    description:
+      'Buat toko online mandiri, kelola produk dan pesanan, lalu arahkan closing ke WhatsApp bersama Daganta.',
+    url: 'https://daganta.store',
+    siteName: 'Daganta',
+    locale: 'id_ID',
+    type: 'website',
+    images: [
+      {
+        url: '/logo.png',
+        width: 512,
+        height: 512,
+        alt: 'Logo Daganta',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Daganta - Webstore Instan untuk UMKM dan Agen Digital',
+    description:
+      'Buat toko online mandiri, kelola produk dan pesanan, lalu arahkan closing ke WhatsApp bersama Daganta.',
+    images: ['/logo.png'],
+  },
 };
 
 export default function RootLayout({
@@ -18,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={cn("font-sans", geist.variable)}>
-      <body className="font-sans antialiased">
+    <html lang="id" className="font-sans" suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         <Analytics />
         <SpeedInsights />

@@ -149,6 +149,7 @@ model UserProfile {
   agentProfile         AgentProfile?       @relation("UserAgentProfile")
   transferredClients   AgentClient[]       @relation("TransferredClients")
   createdLedgerEntries AgentCreditLedger[] @relation("CreatedLedgerEntries")
+  reviewedAgentTopups  AgentCreditTopupRequest[] @relation("ReviewedAgentTopups")
 }
 
 model Tenant {
@@ -654,6 +655,12 @@ enum AgentCreditDirection {
   DEBIT
 }
 
+enum AgentCreditTopupStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model AgentProfile {
   id                String              @id @default(uuid())
   userProfileId     String              @unique
@@ -671,6 +678,7 @@ model AgentProfile {
   userProfile       UserProfile         @relation("UserAgentProfile", fields: [userProfileId], references: [id], onDelete: Cascade)
   clients           AgentClient[]       @relation("AgentClients")
   creditLedger      AgentCreditLedger[] @relation("AgentCreditLedgers")
+  topupRequests     AgentCreditTopupRequest[] @relation("AgentCreditTopupRequests")
 }
 
 model AgentClient {
@@ -719,4 +727,22 @@ model AgentCreditLedger {
 
   @@index([agentId])
   @@index([createdAt])
+}
+
+model AgentCreditTopupRequest {
+  id               String                 @id @default(uuid())
+  agentId          String
+  amount           Decimal                @db.Decimal(12, 2)
+  note             String?                @db.Text
+  status           AgentCreditTopupStatus @default(PENDING)
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  agent            AgentProfile           @relation("AgentCreditTopupRequests", fields: [agentId], references: [id], onDelete: Cascade)
+  reviewedBy       UserProfile?           @relation("ReviewedAgentTopups", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([agentId, status])
+  @@index([status, createdAt])
 }

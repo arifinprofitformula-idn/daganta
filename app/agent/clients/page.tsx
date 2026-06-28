@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowUpRight, Repeat2 } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { AgentClientOwnershipStatus } from '@prisma/client';
+import { TransferOwnershipDialog } from '@/components/agent/TransferOwnershipDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,10 +171,11 @@ export default async function AgentClientsPage({ searchParams }: AgentClientsPag
                             <ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" />
                           </Link>
                         </Button>
-                        <Button type="button" size="sm" variant="outline" disabled>
-                          <Repeat2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                          Transfer
-                        </Button>
+                        <TransferOwnershipDialog
+                          agentClientId={client.id}
+                          tenantName={client.tenant.name}
+                          disabled={client.ownershipStatus !== AgentClientOwnershipStatus.AGENT_MANAGED}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

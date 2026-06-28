@@ -1,7 +1,9 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 
 function getRequiredString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -9,6 +11,13 @@ function getRequiredString(formData: FormData, key: string) {
 }
 
 export async function login(formData: FormData) {
+  const requestHeaders = await headers();
+  const loginLimit = await rateLimitByIP(getClientIp(requestHeaders), 10, 60);
+
+  if (!loginLimit.success) {
+    redirect('/login?error=' + encodeURIComponent('Terlalu banyak percobaan login. Coba lagi sebentar lagi.'));
+  }
+
   const email = getRequiredString(formData, 'email');
   const password = getRequiredString(formData, 'password');
 

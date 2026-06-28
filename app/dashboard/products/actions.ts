@@ -16,6 +16,7 @@ import {
   updateProductVariants,
   type ProductVariantInput,
 } from '@/lib/data-access/products';
+import { sanitizePlainText, sanitizeProductDescription } from '@/lib/sanitize';
 import { deleteProductImage, uploadProductImage } from '@/lib/storage/product-images';
 
 // Helper to convert string to URL-friendly slug
@@ -37,7 +38,12 @@ export interface MutationResult<T = unknown> {
 
 const ProductFormSchema = z.object({
   name: z.string().trim().min(3, 'Nama produk minimal 3 karakter.').max(255, 'Nama produk maksimal 255 karakter.'),
-  description: z.string().trim().optional().default(''),
+  description: z
+    .string()
+    .trim()
+    .optional()
+    .default('')
+    .transform((value) => sanitizeProductDescription(value)),
   price: z.coerce.number().positive('Harga normal wajib lebih dari 0.'),
   comparePrice: z.coerce.number().positive('Harga coret harus lebih dari 0.').optional(),
   stock: z.coerce.number().int('Stok harus angka bulat.').min(0, 'Stok tidak boleh negatif.'),
@@ -414,7 +420,9 @@ export async function createProductAction(input: CreateProductInput | FormData):
   if (input.weightGram < 0) {
     return { success: false, error: 'Berat produk tidak boleh bernilai negatif.' };
   }
-  if (!input.description || input.description.trim().length < 5) {
+  const sanitizedDescription = sanitizeProductDescription(input.description);
+
+  if (!sanitizedDescription || sanitizedDescription.length < 5) {
     return { success: false, error: 'Deskripsi produk wajib diisi dan minimal 5 karakter.' };
   }
 
@@ -490,7 +498,7 @@ export async function createProductAction(input: CreateProductInput | FormData):
           categoryId: input.categoryId || null,
           name: input.name.trim(),
           slug: uniqueSlug,
-          description: input.description.trim(),
+          description: sanitizedDescription,
           status: input.status,
           basePrice: input.basePrice,
           // TODO: In the next phase, migrate file storage to Supabase Storage and save the public URL here.
@@ -582,7 +590,9 @@ export async function editProductAction(
   if (input.weightGram < 0) {
     return { success: false, error: 'Berat produk tidak boleh bernilai negatif.' };
   }
-  if (!input.description || input.description.trim().length < 5) {
+  const sanitizedDescription = sanitizeProductDescription(input.description);
+
+  if (!sanitizedDescription || sanitizedDescription.length < 5) {
     return { success: false, error: 'Deskripsi produk wajib diisi dan minimal 5 karakter.' };
   }
 
@@ -636,7 +646,7 @@ export async function editProductAction(
           categoryId: input.categoryId || null,
           name: input.name.trim(),
           slug: uniqueSlug,
-          description: input.description.trim(),
+          description: sanitizedDescription,
           status: input.status,
           basePrice: input.basePrice,
           // TODO: In the next phase, migrate file storage to Supabase Storage and save the public URL here.
@@ -1080,13 +1090,16 @@ export async function createCategoryAction(input: {
   }
 
   try {
+    const sanitizedCategoryDescription = input.description
+      ? sanitizePlainText(input.description)
+      : null;
     const category = await prisma.$transaction(async (tx) => {
       const newCategory = await tx.productCategory.create({
         data: {
           tenantId,
           name: input.name.trim(),
           slug: uniqueSlug,
-          description: input.description?.trim() || null,
+          description: sanitizedCategoryDescription || null,
           sortOrder: input.sortOrder || 0,
           isActive: true,
         }
@@ -1167,13 +1180,16 @@ export async function editCategoryAction(
   }
 
   try {
+    const sanitizedCategoryDescription = input.description
+      ? sanitizePlainText(input.description)
+      : null;
     const category = await prisma.$transaction(async (tx) => {
       const updatedCategory = await tx.productCategory.update({
         where: { id: categoryId, tenantId },
         data: {
           name: input.name.trim(),
           slug: uniqueSlug,
-          description: input.description?.trim() || null,
+          description: sanitizedCategoryDescription || null,
           sortOrder: input.sortOrder || 0,
         }
       });

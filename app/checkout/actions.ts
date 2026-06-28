@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { z } from 'zod';
 import {
   NotificationChannel,
@@ -14,6 +15,7 @@ import { clearCart, getCart } from '@/lib/cart/cart';
 import { getDistricts, getRegencies } from '@/lib/data-access/regions';
 import { createNotificationEvent } from '@/lib/notifications/create-event';
 import { prisma } from '@/lib/prisma';
+import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 import { getStorefrontTenantContext } from '@/lib/tenant/storefront-tenant';
 
 export interface CheckoutActionState {
@@ -108,6 +110,13 @@ export async function createOrderAction(
   let orderId: string | null = null;
 
   try {
+    const requestHeaders = await headers();
+    const checkoutLimit = await rateLimitByIP(getClientIp(requestHeaders), 5, 60);
+
+    if (!checkoutLimit.success) {
+      return { success: false, error: 'Terlalu banyak percobaan checkout. Coba lagi sebentar lagi.' };
+    }
+
     const tenantId = await getCheckoutTenantId();
     const parsed = CheckoutSchema.safeParse({
       name: formData.get('name'),

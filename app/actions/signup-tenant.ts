@@ -235,3 +235,5 @@ export async function signupTenantAction(formData: FormData): Promise<SignupResu
     };
   }
 }
+
+export const registerTenantAction = signupTenantAction;

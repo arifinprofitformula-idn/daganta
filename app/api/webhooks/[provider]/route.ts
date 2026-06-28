@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PaymentProvider, Prisma, WebhookEventStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sanitizeWebhookHeaders } from '@/lib/payments/webhooks/headers';
+import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 import {
   extractWebhookTransactionId,
   processPaymentWebhook,
@@ -66,6 +67,12 @@ function getEventType(provider: WebhookProvider, payload: WebhookPayload) {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const webhookLimit = await rateLimitByIP(getClientIp(request.headers), 100, 60);
+
+  if (!webhookLimit.success) {
+    return jsonResponse({ received: false }, 429);
+  }
+
   const { provider: providerSlug } = await context.params;
   const provider = providerBySlug[providerSlug.toLowerCase()];
 

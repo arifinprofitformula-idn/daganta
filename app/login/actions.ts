@@ -1,9 +1,18 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { getAuthAdapter } from '@/lib/platform/auth';
+import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 
 export async function login(formData: FormData) {
+  const requestHeaders = await headers();
+  const loginLimit = await rateLimitByIP(getClientIp(requestHeaders), 10, 60);
+
+  if (!loginLimit.success) {
+    redirect('/login?error=' + encodeURIComponent('Terlalu banyak percobaan login. Coba lagi sebentar lagi.'));
+  }
+
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
