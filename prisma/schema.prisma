@@ -706,6 +706,7 @@ model AgentCreditLedger {
   referenceInvoiceId String?
   referenceClientId  String?
   description        String?               @db.Text
+  metadata           Json?
   createdByUserId    String?
   createdAt          DateTime              @default(now())
 
