@@ -78,7 +78,10 @@ export async function getProductsByTenantId(tenantId: string) {
     },
     include: {
       variants: {
-        where: { isActive: true },
+        where: {
+          tenantId,
+          isActive: true,
+        },
       },
       category: true,
     },
@@ -114,6 +117,7 @@ export async function getStorefrontProductsByTenant(
       },
       variants: {
         where: {
+          tenantId,
           isActive: true,
         },
         orderBy: {
@@ -156,6 +160,7 @@ export async function getStorefrontProductBySlug(
       },
       variants: {
         where: {
+          tenantId,
           isActive: true,
         },
         orderBy: {
@@ -240,7 +245,10 @@ export async function getFeaturedProductsByTenantId(tenantId: string) {
     },
     include: {
       variants: {
-        where: { isActive: true },
+        where: {
+          tenantId,
+          isActive: true,
+        },
       },
       category: true,
     },
@@ -265,7 +273,10 @@ export async function getProductBySlug(tenantId: string, slug: string) {
     },
     include: {
       variants: {
-        where: { isActive: true },
+        where: {
+          tenantId,
+          isActive: true,
+        },
       },
       category: true,
     },
@@ -354,6 +365,9 @@ export async function getProductsByTenant(
           },
         },
         variants: {
+          where: {
+            tenantId,
+          },
           select: {
             stock: true,
             isActive: true,

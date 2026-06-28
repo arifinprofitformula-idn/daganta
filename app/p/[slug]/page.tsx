@@ -152,7 +152,10 @@ export default async function Page({ params }: PageProps) {
     take: 4,
     include: {
       variants: {
-        where: { isActive: true },
+        where: {
+          tenantId: tenant.id,
+          isActive: true,
+        },
       },
       category: true,
     },

@@ -824,6 +824,9 @@ export async function updateProductAction(productId: string, formData: FormData)
       },
       include: {
         variants: {
+          where: {
+            tenantId,
+          },
           orderBy: {
             createdAt: 'asc',
           },
