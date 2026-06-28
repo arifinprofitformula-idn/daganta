@@ -158,6 +158,7 @@ model Tenant {
   subdomain          String       @unique
   status             TenantStatus @default(ACTIVE)
   whatsappNumber     String?
+  paymentProvider    PaymentProvider @default(MANUAL)
   ownerId            String
   trialEndsAt        DateTime?
   subscriptionEndsAt DateTime?

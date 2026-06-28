@@ -4,6 +4,7 @@ import type { TenantResolveResult } from '@/lib/tenant/types';
 
 const STOREFRONT_EXCLUDED_PREFIXES = [
   '/api',
+  '/agent',
   '/dashboard',
   '/login',
   '/logout',
@@ -46,6 +47,23 @@ async function resolveTenantForMiddleware(request: NextRequest) {
   }
 
   return (await response.json()) as TenantResolveResult;
+}
+
+async function resolveAgentAccessForMiddleware(request: NextRequest) {
+  const url = new URL('/api/internal/agent-access', request.url);
+  const response = await fetch(url, {
+    headers: request.headers,
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return (await response.json()) as {
+    authenticated: boolean;
+    isAgent: boolean;
+  };
 }
 
 export async function middleware(request: NextRequest) {
@@ -102,10 +120,23 @@ export async function middleware(request: NextRequest) {
 
   const isDashboardRoute =
     pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+  const isAgentRoute = pathname === '/agent' || pathname.startsWith('/agent/');
   const isLoginRoute = pathname === '/login';
 
   if (isDashboardRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  if (isAgentRoute) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    const agentAccess = await resolveAgentAccessForMiddleware(request);
+
+    if (!agentAccess?.isAgent) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
 
   if (isLoginRoute && user) {

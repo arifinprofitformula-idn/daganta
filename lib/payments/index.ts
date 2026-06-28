@@ -1,17 +1,13 @@
-import { PaymentProvider } from '@prisma/client';
-import { manualPaymentAdapter } from './manual';
-
-export { manualPaymentAdapter } from './manual';
-export type { CreateManualPaymentInput, PaymentAdapter, PaymentInstruction } from './types';
-
-export const paymentAdapters = {
-  [PaymentProvider.MANUAL]: manualPaymentAdapter,
-} as const;
-
-export function getPaymentAdapter(provider: PaymentProvider) {
-  if (provider !== PaymentProvider.MANUAL) {
-    throw new Error('Provider pembayaran belum aktif.');
-  }
-
-  return paymentAdapters[provider];
-}
+export { getPaymentAdapter } from './factory';
+export { manualPaymentAdapter, manualTransferAdapter, ManualTransferAdapter } from './adapters/manual';
+export { midtransAdapter, MidtransAdapter } from './adapters/midtrans';
+export type {
+  CreateManualPaymentInput,
+  PaymentAdapter,
+  PaymentInstruction,
+  PaymentRequest,
+  PaymentRequestItem,
+  PaymentResponse,
+  PaymentStatusResponse,
+  RefundResponse,
+} from './types';
