@@ -74,6 +74,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=""
 
 NEXT_PUBLIC_APP_URL="https://daganta.store"
 NEXT_PUBLIC_STOREFRONT_ROOT_DOMAIN="daganta.store"
+INTERNAL_APP_URL="http://app:3000"
 
 RUN_MIGRATIONS="false"
 RUN_DB_SEED="false"
@@ -140,6 +141,11 @@ Tambahkan URL production yang tepat ke Supabase Auth:
 - Site URL: `https://daganta.store`;
 - redirect URL production yang benar-benar dipakai aplikasi;
 - hindari wildcard redirect yang terlalu luas untuk production.
+
+Jika DNS memakai Cloudflare proxy, gunakan SSL/TLS mode **Full (strict)** atau
+minimal **Full**. Mode **Flexible** akan membuat Cloudflare mengakses origin
+melalui HTTP, lalu Nginx origin mengembalikan redirect ke HTTPS, sehingga browser
+mengalami `ERR_TOO_MANY_REDIRECTS`.
 
 ## 5. First Deployment with Compose
 

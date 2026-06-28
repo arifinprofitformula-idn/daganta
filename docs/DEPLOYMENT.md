@@ -56,6 +56,7 @@ Isi nilai production asli:
 - `AUTH_SECRET`
 - `NEXT_PUBLIC_APP_URL="https://daganta.store"`
 - `NEXT_PUBLIC_STOREFRONT_ROOT_DOMAIN="daganta.store"`
+- `INTERNAL_APP_URL="http://app:3000"` untuk Docker Compose
 
 Jangan commit `.env.production`, `.env`, atau secret apa pun.
 
@@ -102,6 +103,11 @@ Certificate harus tersedia di:
 /etc/letsencrypt/live/daganta.store/fullchain.pem
 /etc/letsencrypt/live/daganta.store/privkey.pem
 ```
+
+Jika domain memakai Cloudflare proxy, set SSL/TLS mode ke **Full (strict)**.
+Jangan memakai **Flexible**, karena Cloudflare akan menghubungi origin lewat HTTP
+sementara Nginx origin mengarahkan HTTP ke HTTPS; kombinasi ini menyebabkan
+`ERR_TOO_MANY_REDIRECTS`.
 
 ## 7. Build dan Jalankan Compose
 

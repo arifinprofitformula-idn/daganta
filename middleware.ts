@@ -49,6 +49,15 @@ function createInternalUrl(pathname: string, request: NextRequest) {
   return new URL(pathname, getInternalBaseUrl(request));
 }
 
+function createPublicUrl(pathname: string, request: NextRequest) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const url = appUrl ? new URL(pathname, appUrl) : new URL(pathname, request.url);
+
+  url.search = request.nextUrl.search;
+
+  return url;
+}
+
 async function resolveTenantForMiddleware(request: NextRequest) {
   const url = createInternalUrl('/api/internal/tenant-resolve', request);
   url.searchParams.set('host', request.headers.get('host') ?? '');
@@ -91,9 +100,8 @@ export async function middleware(request: NextRequest) {
   const hostname = cleanHostname(host);
 
   if (hostname === `www.${rootDomain}`) {
-    const redirectUrl = request.nextUrl.clone();
+    const redirectUrl = createPublicUrl(pathname, request);
     redirectUrl.hostname = rootDomain;
-    redirectUrl.port = '';
     return NextResponse.redirect(redirectUrl);
   }
 
