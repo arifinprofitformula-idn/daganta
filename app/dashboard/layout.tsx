@@ -58,6 +58,10 @@ export default async function Layout({
   const isAgentRoute = dashboardPathname === '/dashboard/agent' || dashboardPathname.startsWith('/dashboard/agent/');
   const canBypassNoMembership = (isAgent && isAgentRoute) || (isPlatformAdmin && isAdminRoute);
 
+  if (isPlatformAdmin && tenantCtx.status === 'NO_MEMBERSHIP' && !isAdminRoute) {
+    redirect('/dashboard/admin/agent-clients');
+  }
+
   // 4. Jika status error, cegah pembacaan data toko dan tampilkan kartu peringatan
   // Bypass NO_MEMBERSHIP hanya berlaku untuk route agent/admin yang memang dijaga lagi oleh page terkait.
   if (tenantCtx.status === 'NO_PROFILE') {
@@ -95,7 +99,11 @@ export default async function Layout({
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-950">
       <div className="hidden min-h-screen shrink-0 md:block">
-        <DashboardSidebar tenantName={tenantName} ownerName="Owner Toko" />
+        <DashboardSidebar
+          tenantName={tenantName}
+          ownerName="Owner Toko"
+          variant={isPlatformAdmin && isAdminRoute ? 'platform-admin' : 'store'}
+        />
       </div>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
@@ -103,6 +111,7 @@ export default async function Layout({
           tenantName={tenantName}
           userName={sessionUserName}
           userEmail={sessionUserEmail}
+          variant={isPlatformAdmin && isAdminRoute ? 'platform-admin' : 'store'}
         />
         <main className="flex-1 p-4 md:p-8">
           <div className="mx-auto w-full max-w-7xl space-y-6">

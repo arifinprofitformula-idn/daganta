@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CreditCard,
+  Landmark,
   Home,
   Package,
+  ShieldCheck,
   Settings,
   ShoppingCart,
   Store,
@@ -16,6 +18,7 @@ import { cn } from '@/lib/utils';
 interface DashboardSidebarProps {
   tenantName?: string;
   ownerName?: string;
+  variant?: 'store' | 'platform-admin';
 }
 
 const navigationItems = [
@@ -27,11 +30,20 @@ const navigationItems = [
   { label: 'Pengaturan Toko', href: '/dashboard/settings', icon: Settings },
 ];
 
+const platformAdminNavigationItems = [
+  { label: 'Klien Agen', href: '/dashboard/admin/agent-clients', icon: ShieldCheck },
+  { label: 'Pembayaran', href: '/admin/payments', icon: Landmark },
+  { label: 'Top Up Agen', href: '/admin/agent-topups', icon: CreditCard },
+];
+
 export function DashboardSidebar({
   tenantName = 'Toya Nusantara',
   ownerName = 'Owner Toko',
+  variant = 'store',
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const isPlatformAdmin = variant === 'platform-admin';
+  const items = isPlatformAdmin ? platformAdminNavigationItems : navigationItems;
 
   return (
     <aside className="flex h-full w-[240px] flex-col bg-[#1A355C] text-white">
@@ -41,12 +53,14 @@ export function DashboardSidebar({
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">Daganta</p>
-          <p className="truncate text-xs text-white/60">Dashboard Owner</p>
+          <p className="truncate text-xs text-white/60">
+            {isPlatformAdmin ? 'Platform Admin' : 'Dashboard Owner'}
+          </p>
         </div>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigationItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === '/dashboard'
@@ -72,7 +86,9 @@ export function DashboardSidebar({
       <div className="border-t border-white/10 p-4">
         <div className="rounded-lg bg-white/10 p-3">
           <p className="truncate text-sm font-semibold">{tenantName}</p>
-          <p className="mt-1 truncate text-xs text-white/65">{ownerName}</p>
+          <p className="mt-1 truncate text-xs text-white/65">
+            {isPlatformAdmin ? 'Akses sistem Daganta' : ownerName}
+          </p>
         </div>
       </div>
     </aside>

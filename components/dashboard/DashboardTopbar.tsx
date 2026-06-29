@@ -15,12 +15,14 @@ interface DashboardTopbarProps {
   tenantName?: string;
   userName?: string | null;
   userEmail?: string;
+  variant?: 'store' | 'platform-admin';
 }
 
 export function DashboardTopbar({
   tenantName = 'Toya Nusantara',
   userName,
   userEmail = '',
+  variant = 'store',
 }: DashboardTopbarProps) {
   const displayName = userName || userEmail || 'Owner Toko';
   const displayEmail = userEmail || 'Akun aktif';
@@ -50,13 +52,19 @@ export function DashboardTopbar({
             <SheetDescription className="sr-only">
               Menu utama untuk mengelola toko Daganta.
             </SheetDescription>
-            <DashboardSidebar tenantName={tenantName} ownerName={displayName} />
+            <DashboardSidebar
+              tenantName={tenantName}
+              ownerName={displayName}
+              variant={variant}
+            />
           </SheetContent>
         </Sheet>
 
         <div className="hidden sm:block">
           <p className="text-sm font-semibold text-slate-900">{tenantName}</p>
-          <p className="text-xs text-slate-500">Dashboard Toko</p>
+          <p className="text-xs text-slate-500">
+            {variant === 'platform-admin' ? 'Dashboard Admin Platform' : 'Dashboard Toko'}
+          </p>
         </div>
       </div>
 

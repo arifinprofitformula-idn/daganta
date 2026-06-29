@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import { PlatformRole } from '@prisma/client';
 import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitByIP } from '@/lib/rate-limit';
 
 function getRequiredString(formData: FormData, key: string) {
@@ -26,15 +28,44 @@ export async function login(formData: FormData) {
   }
 
   let signInError: string | null = null;
+  let redirectTarget = '/dashboard';
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     signInError = error?.message || null;
+
+    if (!signInError && data.user) {
+      let profile = await prisma.userProfile.findUnique({
+        where: { authUserId: data.user.id },
+        select: { platformRole: true },
+      });
+
+      if (!profile && data.user.email) {
+        await prisma.userProfile.updateMany({
+          where: {
+            email: data.user.email,
+            authUserId: null,
+          },
+          data: {
+            authUserId: data.user.id,
+          },
+        });
+
+        profile = await prisma.userProfile.findUnique({
+          where: { authUserId: data.user.id },
+          select: { platformRole: true },
+        });
+      }
+
+      if (profile?.platformRole === PlatformRole.SUPER_ADMIN) {
+        redirectTarget = '/dashboard/admin/agent-clients';
+      }
+    }
   } catch {
     signInError =
       'Login Supabase belum bisa diproses. Periksa konfigurasi NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY.';
@@ -44,5 +75,5 @@ export async function login(formData: FormData) {
     redirect('/login?error=' + encodeURIComponent(signInError));
   }
 
-  redirect('/dashboard');
+  redirect(redirectTarget);
 }
