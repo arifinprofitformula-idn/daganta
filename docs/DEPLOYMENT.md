@@ -60,6 +60,16 @@ Isi nilai production asli:
 
 Jangan commit `.env.production`, `.env`, atau secret apa pun.
 
+Jika `DATABASE_URL` memakai Transaction Pooler / PgBouncer, pastikan URL runtime
+memiliki parameter berikut agar Prisma tidak membuat error prepared statement:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:6432/DATABASE?schema=public&pgbouncer=true&connection_limit=1"
+```
+
+Jika URL sudah memiliki parameter seperti `sslmode=require`, tambahkan dengan
+`&pgbouncer=true&connection_limit=1`, bukan membuat `?` kedua.
+
 ## 5. Setup DNS
 
 Di DNS provider domain, arahkan record berikut ke IP publik VPS:

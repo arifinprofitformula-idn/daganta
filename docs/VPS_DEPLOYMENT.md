@@ -58,7 +58,7 @@ Production minimum:
 NODE_ENV="production"
 DATABASE_PROVIDER="postgres"
 # Sumobase Transaction Pooler untuk query runtime aplikasi.
-DATABASE_URL="postgresql://USER:PASSWORD@SUMOBASE_HOST:6432/DATABASE?..."
+DATABASE_URL="postgresql://USER:PASSWORD@SUMOBASE_HOST:6432/DATABASE?schema=public&pgbouncer=true&connection_limit=1"
 # Sumobase Direct Connection untuk Prisma migration.
 DIRECT_URL="postgresql://USER:PASSWORD@SUMOBASE_DIRECT_HOST:DIRECT_PORT/DATABASE?..."
 
@@ -85,6 +85,10 @@ Rules:
 
 - gunakan connection string tab **Transaction Pooler** Sumobase untuk
   `DATABASE_URL`;
+- jika `DATABASE_URL` memakai Transaction Pooler / PgBouncer, tambahkan
+  `pgbouncer=true&connection_limit=1` untuk mencegah error prepared statement
+  seperti `prepared statement "s0" already exists` atau
+  `prepared statement "s5" does not exist`;
 - gunakan connection string tab **Direct Connection** Sumobase untuk
   `DIRECT_URL`;
 - jangan memakai Transaction Pooler sebagai `DIRECT_URL` untuk migration;
