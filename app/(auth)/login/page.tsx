@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { redirect } from 'next/navigation';
 import {
   BarChart3,
   Boxes,
@@ -12,7 +11,6 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
 import LoginForm from './login-form';
 
 interface LoginPageProps {
@@ -41,23 +39,6 @@ const benefits = [
 ];
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  let hasUser = false;
-
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    hasUser = !!user;
-  } catch {
-    hasUser = false;
-  }
-
-  if (hasUser) {
-    redirect('/dashboard');
-  }
-
   const resolvedSearchParams = await searchParams;
 
   return (
