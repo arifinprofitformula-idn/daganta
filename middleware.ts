@@ -147,7 +147,6 @@ export async function middleware(request: NextRequest) {
   const isDashboardRoute =
     pathname === '/dashboard' || pathname.startsWith('/dashboard/');
   const isAgentRoute = pathname === '/agent' || pathname.startsWith('/agent/');
-  const isLoginRoute = pathname === '/login';
 
   if (isDashboardRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -163,10 +162,6 @@ export async function middleware(request: NextRequest) {
     if (!agentAccess?.isAgent) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-  }
-
-  if (isLoginRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return sessionResponse;
